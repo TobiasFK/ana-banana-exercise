@@ -7,7 +7,7 @@
     const msg = "This site isn't connected to its database yet. Check back soon.";
     const err = Object.assign(new Error("not configured"), { userMsg: msg });
     document.addEventListener("DOMContentLoaded", () => { const m = document.getElementById("signinMsg"); if (m) m.textContent = msg; });
-    window.fp = { onUser(cb) { setTimeout(() => cb(null), 0); }, async signIn() { throw err; }, async resetPassword() { throw err; }, async signOut() {}, async watch() {}, async save() { throw err; } };
+    window.fp = { onUser(cb) { setTimeout(() => cb(null), 0); }, async signIn() { throw err; }, async resetPassword() { throw err; }, async getSharedKey() { return ""; }, async setSharedKey() { throw err; }, async signOut() {}, async watch() {}, async save() { throw err; } };
     return;
   }
   const SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
@@ -41,6 +41,16 @@
     async resetPassword(email) {
       const F = await ready;
       await F.au.sendPasswordResetEmail(F.auth, email);
+    },
+    // The household Claude key: one doc both accounts can read, only the owner can change (see firestore.rules).
+    async getSharedKey() {
+      const F = await ready;
+      try { const d = await F.fs.getDoc(F.fs.doc(F.db, "shared", "claude")); return (d.exists() && d.data().key) || ""; }
+      catch (e) { console.error("Couldn't read the shared Claude key", e); return ""; }
+    },
+    async setSharedKey(key) {
+      const F = await ready;
+      await F.fs.setDoc(F.fs.doc(F.db, "shared", "claude"), { key: key || "", updated: new Date().toISOString() });
     },
     async signOut() { const F = await ready; await F.au.signOut(F.auth); },
     // cb({key: data}) with every document, now and on each change (other devices included).

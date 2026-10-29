@@ -333,10 +333,11 @@ section.panel h2{font-size:24px;font-weight:700}
 
   <details class="fold" id="settingsFold"><summary><h2>Settings</h2></summary><div class="foldbody">
     <div class="settings">
-      <label class="field wide" for="apiKey">Claude API key
+      <label class="field wide" for="apiKey" id="apiKeyWrap">Claude API key
         <input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…">
-        <span class="hint">Used for "Adjust my week" and "Adjust the whole plan". Stored only on this device. Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</span>
+        <span class="hint">Builds and adjusts the plans for both of you. Saved to your account; Ana's plan uses it automatically. Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</span>
       </label>
+      <p class="hint wide" id="sharedKeyNote" hidden>Claude is set up for you. Nothing to add here.</p>
       <label class="field" for="unit">Weights in
         <select id="unit"><option value="lb">lb</option><option value="kg">kg</option></select>
       </label>
@@ -437,8 +438,12 @@ function onDocs(docs){
 }
 
 /* ---------- Claude ---------- */
-const getKey=()=>{try{return localStorage.getItem("tp.apikey")||""}catch(e){return ""}};
-const setKey=k=>{try{k?localStorage.setItem("tp.apikey",k):localStorage.removeItem("tp.apikey")}catch(e){}};
+// One household key, kept in the database behind the login (never in this public code).
+// Tobias (OWNER) sets it in Settings; Ana's account reads it.
+const OWNER="tobias.fabricius@gmail.com";
+let sharedKey="", isOwner=false;
+const getKey=()=>sharedKey;
+const setKey=k=>{sharedKey=k||"";if(isOwner)fp.setSharedKey(sharedKey).catch(e=>console.error("Couldn't save the Claude key",e))};
 async function askClaude(prompt,signal){
   const key=getKey();
   if(!key)throw {code:"no_key"};
@@ -467,8 +472,8 @@ function parseJson(t){
   throw {code:"invalid_json"};
 }
 function errCopy(e){const c=e&&e.code;return c==="cancelled"?"Stopped. Nothing changed.":
-  c==="no_key"?"Add your Claude API key in Settings first.":
-  c==="bad_key"?"Claude didn't accept the API key. Check it in Settings.":
+  c==="no_key"?(isOwner?"Add your Claude API key in Settings first.":"Claude isn't set up yet. Ask Tobias to add the key."):
+  c==="bad_key"?(isOwner?"Claude didn't accept the API key. Check it in Settings.":"Claude didn't accept the key. Ask Tobias to check it."):
   c==="rate_limited"?"Too many requests just now. Try again in a minute.":
   c==="overloaded"?"Claude is busy right now. Try again in a minute.":
   c==="network"?"Couldn't reach Claude. Check your connection and try again.":
@@ -509,7 +514,7 @@ let justDone=null;
 function render(){
   const signed=!!uid, has=!!(prog&&prog.active&&W.length);
   $("gateSignin").hidden=signed; $("gateSetup").hidden=!signed||has; $("app").hidden=!signed||!has;
-  $("setupKeyWrap").hidden=!!getKey();
+  $("setupKeyWrap").hidden=!!getKey()||!isOwner;
   if(!signed||!has)return;
   const w=W[wk], st=wkState(wk), ss=sessionsFor(wk), start=addDays(START,wk*7), dn=st.done||{};
   const end=addDays(START,W.length*7-1);
@@ -709,7 +714,7 @@ $("setupBtn").onclick=async()=>{
   const st=$("setupStatus"), msg=$("setupAsk").value.trim(), keyIn=$("setupKey").value.trim();
   if(keyIn)setKey(keyIn);
   if(!msg){st.textContent="Tell Claude a little about yourself first.";st.className="status err";return}
-  if(!getKey()){st.textContent="Add your Claude API key to continue.";st.className="status err";return}
+  if(!getKey()){st.textContent=isOwner?"Add your Claude API key to continue.":"Claude isn't set up yet. Ask Tobias to add the key, then try again.";st.className="status err";return}
   const startMon=todayIdx<=2?mondayOf(now):addDays(mondayOf(now),7);
   const prompt=`${principles()}
 
@@ -859,11 +864,15 @@ function validateProg(o,fresh){
 }
 
 /* ---------- start ---------- */
-$("apiKey").value=getKey();
+try{localStorage.removeItem("tp.apikey")}catch(e){}
 render();
 fp.onUser(async u=>{
   uid=u?u.uid:null;
   $("whoami").textContent=u?(u.email||""):"";
+  isOwner=!!(u&&String(u.email||"").toLowerCase()===OWNER);
+  sharedKey=u?await fp.getSharedKey():"";
+  $("apiKey").value=isOwner?sharedKey:"";
+  $("apiKeyWrap").hidden=!isOwner; $("sharedKeyNote").hidden=isOwner||!u;
   weeks={};bench={};weights={};prog=null;settings={unit:"lb"};applyProg();
   if(uid){loadLocal();wk=curWeek;fp.watch(uid,onDocs)}
   render();

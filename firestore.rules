@@ -11,6 +11,11 @@ service cloud.firestore {
           'ana_carolina_amaral@hotmail.com'
         ];
     }
+    // The shared Claude key: both can read it, only Tobias can change it.
+    match /shared/claude {
+      allow read: if allowed();
+      allow write: if allowed() && request.auth.token.email.lower() == 'tobias.fabricius@gmail.com';
+    }
     match /fitness/{uid}/{rest=**} {
       allow read, write: if allowed() && request.auth.uid == uid;
     }
