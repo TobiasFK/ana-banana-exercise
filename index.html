@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ana Banana exercise plan</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ana Banana">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2323924F'/%3E%3Cpath d='M18 33l9 9 19-20' fill='none' stroke='white' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<style>
+/* Layout: single phone column — sign-in or setup card, then week header, day lanes with session cards, plan tools, settings */
+:root{
+  --bg:#ECEEE9; --surface:#F8F9F6; --ink:#18211D; --muted:#5C6862; --line:#D3D8D1;
+  --moss:#2F5D45; --moss-soft:#DCE7DF; --fan:#D14A12; --fan-soft:#F7E1D5; --steel:#3E5468; --steel-soft:#DDE4EB; --on-fan:#FFFFFF; --ok:#23924F; --ok-soft:#D7EEDF;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"Archivo",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121815; --surface:#1A221E; --ink:#E6EAE5; --muted:#99A59E; --line:#2C3631;
+  --moss:#7DB394; --moss-soft:#22352A; --fan:#F2733A; --fan-soft:#3A2418; --steel:#93AECA; --steel-soft:#1F2C38; --on-fan:#1A110C; --ok:#5ED48C; --ok-soft:#173826; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121815; --surface:#1A221E; --ink:#E6EAE5; --muted:#99A59E; --line:#2C3631;
+  --moss:#7DB394; --moss-soft:#22352A; --fan:#F2733A; --fan-soft:#3A2418; --steel:#93AECA; --steel-soft:#1F2C38; --on-fan:#1A110C; --ok:#5ED48C; --ok-soft:#173826; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:.01em}
+p{margin:0}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:600}
+
+/* prompt */
+.askwrap{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.askwrap>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 14px}
+.askwrap>summary::-webkit-details-marker{display:none}
+.askwrap>summary .t{font-family:var(--display);font-size:20px;font-weight:700;line-height:1.1;flex:1}
+.askwrap>summary .h{font-size:13px;color:var(--muted)}
+.askwrap>summary::after{content:"›";color:var(--muted);font-size:18px;transition:transform .2s}
+.askwrap[open]>summary::after{transform:rotate(90deg)}
+.ask{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
+.ask textarea{width:100%;min-height:84px;resize:vertical;font:inherit;font-size:16px;line-height:1.4;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.ask .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px dashed var(--line);background:none;color:var(--muted);border-radius:999px;padding:5px 10px;font:inherit;font-size:13px;cursor:pointer}
+.status{font-size:14px;color:var(--muted);min-height:1em}
+.status.err{color:var(--fan)}
+.summary{border-left:3px solid var(--fan);padding:2px 0 2px 12px;font-size:15px}
+.history{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.history summary{cursor:pointer;font-weight:600}
+.history ol{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+
+header{display:flex;flex-direction:column;gap:10px}
+.weekbar{display:flex;align-items:center;gap:10px}
+.weekbar h1{font-size:40px;line-height:1;flex:1;font-weight:700}
+.navbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px;cursor:pointer}
+.navbtn:disabled{opacity:.35;cursor:default}
+.meta{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;color:var(--muted);font-size:14px}
+.phase{font-family:var(--display);font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--moss)}
+.badge{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:var(--line);color:var(--muted)}
+.badge.tuned{background:var(--fan-soft);color:var(--fan)}
+.prog{display:flex;gap:4px;margin-top:2px}
+.prog span{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.prog span.on{background:var(--ok)}
+.linkbtn{background:none;border:0;color:var(--fan);font:inherit;font-weight:600;cursor:pointer;padding:0}
+
+.days{display:flex;flex-direction:column}
+.day{display:grid;grid-template-columns:52px 1fr;gap:12px;padding-block:12px;border-top:1px solid var(--line)}
+.day:last-child{border-bottom:1px solid var(--line)}
+.dlabel{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding-top:2px}
+.dlabel b{font-family:var(--display);font-size:20px;font-weight:600;line-height:1}
+.dlabel small{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.day.today .dlabel b{color:var(--fan)}
+.day.today .dlabel small::after{content:" · today";font-family:var(--body);font-weight:600;color:var(--fan)}
+.day.past{opacity:.75}
+.day.alldone{opacity:1}
+.daycheck{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--ok);color:var(--on-fan);flex:none}
+.daycheck svg{width:20px;height:20px}
+.day.alldone .dlabel b{color:var(--ok)}
+.daycheck.pop{animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(0)}100%{transform:scale(1)}}
+#confetti{position:absolute;left:0;pointer-events:none;z-index:50}
+.slot{display:flex;flex-direction:column;gap:8px;min-width:0}
+.rest{color:var(--muted);font-size:14px;padding-top:3px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card.done{opacity:.6}
+.card.done .ctitle{text-decoration:line-through;text-decoration-thickness:1px}
+.chead{display:flex;gap:10px;align-items:flex-start;padding:12px;cursor:pointer;width:100%;background:none;border:0;color:inherit;font:inherit;text-align:left}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--fan);outline-offset:2px}
+.tag{flex:none;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:4px;margin-top:2px}
+.tag.bike{background:var(--fan-soft);color:var(--fan)}
+.tag.run{background:var(--moss-soft);color:var(--moss)}
+.tag.str{background:var(--steel-soft);color:var(--steel)}
+.tag.other{background:var(--line);color:var(--muted)}
+.cbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ctitle{font-weight:600;font-size:16px}
+.csum{color:var(--muted);font-size:14px}
+.dur{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dlabel .dur{font-size:11px}
+.pri{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.chev{flex:none;color:var(--muted);transition:transform .2s}
+.card.open .chev{transform:rotate(90deg)}
+.detail{padding:0 12px 12px;display:flex;flex-direction:column;gap:12px}
+.block{display:flex;flex-direction:column;gap:6px}
+.block h3{font-family:var(--body);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.ex{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.exrow{display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:baseline;padding:10px 2px;border-bottom:1px solid var(--line)}
+.exname{min-width:0;font-weight:500}
+.exdose{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;color:var(--fan);text-align:right;white-space:nowrap}
+.exrow .wt{grid-column:1/-1}
+.ex.warm .exrow{padding-block:7px}
+.ex.warm .exname{font-weight:400;color:var(--muted)}
+.ex.warm .exdose{color:var(--muted)}
+.num{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;color:var(--fan);white-space:nowrap}
+.cue{font-size:13px;color:var(--muted);border-left:2px solid var(--line);padding-left:10px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:8px 14px;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--fan);border-color:var(--fan);color:var(--on-fan)}
+.btn:disabled{opacity:.5;cursor:default}
+.card.done .btn.primary{background:var(--bg);color:var(--ink);border-color:var(--line)}
+label.move{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+select,input{font:inherit;font-size:16px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 8px}
+.skipped{display:flex;flex-direction:column;gap:8px}
+
+section.panel{display:flex;flex-direction:column;gap:12px}
+section.panel h2{font-size:24px;font-weight:700}
+.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary h2{flex:1;font-size:24px;font-weight:700}
+.fold>summary::after{content:"›";color:var(--muted);font-size:22px;transition:transform .2s}
+.fold[open]>summary::after{transform:rotate(90deg)}
+.foldbody{display:flex;flex-direction:column;gap:12px;padding-top:12px}
+.planmeta{font-size:13px;color:var(--muted)}
+.ambition{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:12px;font-size:14px;max-width:62ch}
+.ambition h3{font-family:var(--body);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.rules{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.rules li{display:grid;grid-template-columns:22px 1fr;gap:8px}
+.rules li::before{content:"→";color:var(--fan);font-weight:700}
+.bench{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bench label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.bench input{width:100%}
+.phases{display:grid;grid-template-columns:repeat(var(--n,10),1fr);gap:3px}
+.phases button{height:30px;border:0;border-radius:4px;font-family:var(--mono);font-size:11px;cursor:pointer;color:var(--ink);background:var(--line)}
+.phases button.b{background:var(--moss-soft)} .phases button.u{background:var(--steel-soft)} .phases button.p{background:var(--fan-soft)} .phases button.l{background:var(--surface);border:1px dashed var(--muted)}
+.phases button.cur{outline:2px solid var(--fan)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.foot{font-size:12px;color:var(--muted)}
+.howto{font-size:13px;color:var(--muted)}
+.howto summary{cursor:pointer;width:max-content;max-width:100%;padding:2px 0;font-weight:600;list-style:none}
+.howto summary::-webkit-details-marker{display:none}
+.howto summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+.howto[open] summary::before{transform:rotate(90deg)}
+.howlinks{display:flex;flex-wrap:wrap;gap:6px;padding-top:8px}
+.howlinks a{color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--surface)}
+.howlinks a::after{content:" ↗";color:var(--muted)}
+.howlinks a:hover{border-color:var(--fan)}
+.wx{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--moss);background:var(--moss-soft);border-radius:999px;padding:2px 8px;font-variant-numeric:tabular-nums;width:max-content}
+.wx.wet{color:var(--steel);background:var(--steel-soft)}
+.wxline{display:flex;flex-direction:column;gap:2px;font-size:13px;background:var(--moss-soft);color:var(--ink);border-radius:8px;padding:8px 10px}
+.wxline b{color:var(--moss)}
+.wxline .nudge{color:var(--fan);font-weight:600}
+.raincall{display:flex;flex-direction:column;gap:8px;background:var(--steel-soft);color:var(--ink);border-left:4px solid var(--steel);border-radius:8px;padding:10px 12px;font-size:14px}
+.raincall b{color:var(--steel)}
+.rcrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.rcbtn{padding:6px 12px;font-size:13px;background:var(--surface)}
+.chead .wx{margin-top:4px}
+.wxnote{font-size:12px;color:var(--muted)}
+.tag.rest{background:var(--ok-soft);color:var(--ok)}
+.restlinks{display:flex;flex-wrap:wrap;gap:6px}
+.restlinks a{color:var(--fan);font-weight:600;text-decoration:none;white-space:nowrap;border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--surface)}
+.wt{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.wt button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:16px;font-weight:600;cursor:pointer}
+.wt input{width:68px;height:36px;text-align:center;font-family:var(--mono);font-size:16px;font-variant-numeric:tabular-nums}
+.wt button{width:36px;height:36px}
+.wt .unit{font-size:13px;color:var(--muted)}
+.wt .last{font-size:12px;color:var(--muted);flex-basis:100%}
+.wt .last.new{color:var(--fan)}
+@media (max-width:600px){
+  .dlabel{flex-wrap:wrap}
+  .day{grid-template-columns:1fr;gap:8px;padding-block:14px}
+  .dlabel{flex-direction:row;align-items:baseline;gap:8px;padding-top:0}
+  .dlabel b{font-size:22px}
+  .rest{padding-top:0}
+  .chead{padding:12px 12px 12px 10px}
+  .detail{padding:0 10px 12px}
+}
+@media (prefers-reduced-motion:reduce){.chev{transition:none}}
+.gate{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 16px;display:flex;flex-direction:column;gap:12px}
+.gate h1{font-size:34px;font-weight:700;line-height:1}
+.gate p{max-width:62ch}
+.gate textarea{width:100%;min-height:150px;resize:vertical;font:inherit;font-size:16px;line-height:1.4;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.field input,.field select{width:100%}
+.settings{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.settings .wide{grid-column:1/-1}
+.hint{font-size:12px;color:var(--muted)}
+.hint a{color:var(--fan)}
+.danger{color:var(--fan)}
+@media (max-width:600px){.settings{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="gate" id="gateSignin" hidden>
+    <div class="eyebrow">Ana Banana exercise plan</div>
+    <h1>Your plan, week by week</h1>
+    <p>Describe what you want to work towards and Claude builds a weekly plan around it. Change it whenever your week changes.</p>
+    <form id="emailForm" style="display:flex;flex-direction:column;gap:10px">
+      <label class="field" for="signinEmail">Your email
+        <input id="signinEmail" type="email" autocomplete="email" inputmode="email" required placeholder="you@hotmail.com">
+      </label>
+      <button class="btn primary" id="emailBtn" type="submit" style="align-self:flex-start">Email me a sign-in link</button>
+    </form>
+    <p class="hint" id="signinMsg">No password. We email you a link, you tap it, you're in. Your plan is private to you.</p>
+    <button class="linkbtn" id="signInBtn" type="button" style="align-self:flex-start;font-size:13px">Or sign in with Google</button>
+  </section>
+
+  <section class="gate" id="gateSetup" hidden>
+    <div class="eyebrow">Set up your plan</div>
+    <h1>What do you want to work on?</h1>
+    <p>Tell Claude about yourself in your own words. The more it knows, the better the plan.</p>
+    <ul class="hint" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:2px">
+      <li>Your goal, and by when</li>
+      <li>How many days a week you can train, and for how long</li>
+      <li>Where you train and what equipment you have</li>
+      <li>What you enjoy, and what you'd rather skip</li>
+      <li>Any injuries or things to be careful with</li>
+    </ul>
+    <textarea id="setupAsk" aria-label="Describe your goals" placeholder="E.g. I want to feel stronger and have more energy by spring. I can train 3–4 times a week, 45 minutes max. My gym has dumbbells, cable machines, a treadmill and a rowing machine. I like classes and stretching, not running. Bit of a sore lower back sometimes."></textarea>
+    <label class="field" for="setupKey" id="setupKeyWrap">Claude API key
+      <input id="setupKey" type="password" autocomplete="off" placeholder="sk-ant-…">
+      <span class="hint">Needed to build and adjust the plan. Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. It's stored only on this device.</span>
+    </label>
+    <div class="row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn primary" id="setupBtn">Build my plan</button>
+      <button class="btn" id="setupStop" type="button" hidden>Stop</button>
+      <span class="status" id="setupStatus" role="status"></span>
+    </div>
+  </section>
+
+  <div id="app" hidden style="display:contents">
+  <details class="askwrap" id="askWrap"><summary><span class="t">Adjust my week</span><span class="h">Tell Claude what changed</span></summary>
+  <form class="ask" id="askForm">
+    <textarea id="ask" aria-label="How's your week looking?" placeholder="E.g. Busy Tuesday and Wednesday, travelling Thursday. Only 30 minutes on Friday. Legs a bit sore from the weekend."></textarea>
+    <div class="chips">
+      <button type="button" class="chip">Missed today, shift things</button>
+      <button type="button" class="chip">Only 30 min today</button>
+      <button type="button" class="chip">Feeling tired, go easier</button>
+      <button type="button" class="chip">Busy week, keep the essentials</button>
+    </div>
+    <div class="row">
+      <button class="btn primary" id="askBtn" type="submit">Plan my week</button>
+      <button class="btn" id="stopBtn" type="button" hidden>Stop</button>
+      <span class="status" id="status" role="status"></span>
+    </div>
+    <p class="summary" id="summary" hidden></p>
+    <details class="history" id="history" hidden><summary>What you've told me this week</summary><ol id="historyList"></ol></details>
+  </form></details>
+
+  <header>
+    <div class="eyebrow" id="eyebrow">Ana Banana exercise plan</div>
+    <div class="weekbar">
+      <button class="navbtn" id="prev" aria-label="Previous week">‹</button>
+      <h1 id="wtitle">Week 1</h1>
+      <button class="navbtn" id="next" aria-label="Next week">›</button>
+    </div>
+    <div class="meta"><span class="phase" id="wphase"></span><span id="wdates"></span><span class="badge" id="badge">Standard plan</span><button class="linkbtn" id="gotoToday" hidden>Back to this week</button></div>
+    <p id="wfocus" style="max-width:62ch"></p>
+    <div class="prog" id="prog" aria-label="Days done this week"></div>
+    <button class="linkbtn" id="resetBtn" hidden style="align-self:flex-start;font-size:13px">Go back to the standard plan</button>
+  </header>
+
+  <div class="days" id="days"></div>
+  <div class="skipped" id="skipped"></div>
+
+  <details class="fold" id="rulesFold"><summary><h2>When the week changes</h2></summary><div class="foldbody">
+    <ul class="rules">
+      <li><span><b>Just tell the box at the top.</b> Type what changed and the rest of the week is rebuilt around it. Finished sessions stay put.</span></li>
+      <li><span><b>Shift, don't stack.</b> Missed something? It moves to the next free day, or drops. Never double up to catch up.</span></li>
+      <li><span><b>No hard days back to back.</b> Give your body a day between the toughest sessions.</span></li>
+      <li><span><b>Always warm up.</b> Three minutes or so. Short enough that there's no excuse to skip it.</span></li>
+      <li><span><b>Bigger changes?</b> Use "Adjust the whole plan" further down.</span></li>
+    </ul>
+  </div></details>
+
+  <section class="panel">
+    <h2 id="weeksTitle">The weeks</h2>
+    <div class="phases" id="phases"></div>
+    <div class="legend"><span><i style="background:var(--moss-soft)"></i>Base</span><span><i style="background:var(--steel-soft)"></i>Build</span><span><i style="background:var(--fan-soft)"></i>Peak</span><span><i style="border:1px dashed var(--muted)"></i>Lighter</span></div>
+  </section>
+
+  <details class="askwrap" id="planWrap"><summary><span class="t">Adjust the whole plan</span><span class="h">Change the full program</span></summary>
+  <form class="ask" id="planForm">
+    <textarea id="planAsk" aria-label="What should change in the overall plan?" placeholder="E.g. More upper body. Swap lunges for step-ups. Add a yoga session on Sundays."></textarea>
+    <div class="chips">
+      <button type="button" class="chip">More strength work</button>
+      <button type="button" class="chip">More cardio</button>
+      <button type="button" class="chip">Make it a bit easier</button>
+      <button type="button" class="chip">Shorter sessions</button>
+    </div>
+    <div class="row">
+      <button class="btn primary" id="planBtn" type="submit">Update the plan</button>
+      <button class="btn" id="planStop" type="button" hidden>Stop</button>
+      <span class="status" id="planStatus" role="status"></span>
+    </div>
+    <div class="ambition">
+      <h3 id="ambTitle">The ambition</h3>
+      <p id="ambText"></p>
+      <p class="planmeta" id="ambSuccess"></p>
+    </div>
+    <p class="summary" id="planSummary" hidden></p>
+    <details class="history" id="planHistory" hidden><summary>Changes you've asked for</summary><ol id="planHistoryList"></ol></details>
+    <p class="planmeta" id="planMeta"></p>
+  </form></details>
+
+  <details class="fold" id="benchFold" hidden><summary><h2>Benchmarks</h2></summary><div class="foldbody">
+    <p style="font-size:14px;color:var(--muted)">Check-ins to see how far you've come. Fill them in when the plan asks.</p>
+    <div class="bench" id="bench"></div>
+  </div></details>
+
+  <details class="fold" id="settingsFold"><summary><h2>Settings</h2></summary><div class="foldbody">
+    <div class="settings">
+      <label class="field wide" for="apiKey">Claude API key
+        <input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…">
+        <span class="hint">Used for "Adjust my week" and "Adjust the whole plan". Stored only on this device. Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</span>
+      </label>
+      <label class="field" for="unit">Weights in
+        <select id="unit"><option value="lb">lb</option><option value="kg">kg</option></select>
+      </label>
+      <div class="field"><span>Signed in as</span><span id="whoami" style="color:var(--ink)"></span></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="signOutBtn" type="button">Sign out</button>
+      <button class="btn danger" id="startOverBtn" type="button">Start a new plan</button>
+      <span class="status" id="startOverMsg"></span>
+    </div>
+  </div></details>
+
+  <p class="foot" id="saveNote">Your plan, ticks and weights are saved to your account.</p>
+  </div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script src="firebase.js"></script>
+<script>
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const MODEL = "claude-sonnet-5-5";
+const $ = id => document.getElementById(id);
+
+/* ---------- plan model ----------
+   program = {active, start:"YYYY-MM-DD" (a Monday), name, profile, ambition, success, rules,
+              weeks:[{ph, focus, vars:{token:value}, notes:{sessionId:text}, titles:{sessionId:text}}],
+              tpl:[session], benchmarks:[label], notes:[{text,at}], summary, updated}
+   session = {id, tag, kind, title, day, sum, warmup:[[name,dose]], cue, items:[[name,dose,startWeight?]], after, mins}
+*/
+let prog=null, W=[], TPL=[];
+let START=mondayOf(new Date());
+const now=new Date();now.setHours(0,0,0,0);
+const todayIdx=(now.getDay()+6)%7;
+let curWeek=0, wk=0;
+const open=new Set();
+let weeks={}, bench={}, weights={}, settings={unit:"lb"};
+
+function mondayOf(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x}
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const fromIso=s=>{const [y,m,d]=String(s).split("-").map(Number);return new Date(y,(m||1)-1,d||1)};
+function fmt(d){return d.toLocaleDateString("en-US",{month:"short",day:"numeric"})}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+const slug=s=>String(s).toLowerCase().replace(/\(.*?\)/g,"").replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,40);
+const phc=ph=>({Base:"b",Build:"u",Peak:"p",Lighter:"l"}[ph]||"b");
+
+function applyProg(){
+  const ok=prog&&prog.active&&Array.isArray(prog.weeks)&&prog.weeks.length&&Array.isArray(prog.tpl);
+  W=ok?prog.weeks:[]; TPL=ok?prog.tpl:[];
+  START=ok&&prog.start?fromIso(prog.start):mondayOf(new Date());
+  curWeek=W.length?Math.max(0,Math.min(W.length-1,Math.floor((now-START)/864e5/7))):0;
+  if(wk>=W.length)wk=curWeek;
+}
+function standard(i){
+  const w=W[i]||{}, vals=w.vars||{};
+  const fill=x=>typeof x==="string"?x.replace(/\{(\w+)\}/g,(m,k)=>k in vals?vals[k]:m):Array.isArray(x)?x.map(fill):(x&&typeof x==="object")?Object.fromEntries(Object.entries(x).map(([k,v])=>[k,fill(v)])):x;
+  return TPL.map(t=>{const o=fill(t);
+    if(w.notes&&w.notes[t.id]!=null)o.after=fill(String(w.notes[t.id]));
+    if(w.titles&&w.titles[t.id])o.title=String(w.titles[t.id]);
+    return o});
+}
+
+/* ---------- storage: Firestore (fitness/{uid}/docs/*), mirrored locally ---------- */
+let uid=null;
+const LKEY=()=>"tp.v1."+(uid||"anon");
+function wkState(i){return weeks[i]||(weeks[i]={plan:null,notes:[],done:{}})}
+function local(){try{localStorage.setItem(LKEY(),JSON.stringify({weeks,bench,weights,prog,settings}))}catch(e){}}
+function loadLocal(){try{const s=JSON.parse(localStorage.getItem(LKEY())||"null");if(s){weeks=s.weeks||{};bench=s.bench||{};weights=s.weights||{};prog=s.prog||null;settings={unit:"lb",...(s.settings||{})};applyProg()}}catch(e){}}
+const writing={}, pending={};
+async function persist(key,data){
+  local();
+  if(!uid)return;
+  pending[key]=data;
+  if(writing[key])return;
+  writing[key]=true;
+  try{
+    while(pending[key]){const body=JSON.parse(JSON.stringify(pending[key]));pending[key]=null;
+      try{await fp.save(uid,key,body);saveOk()}catch(e){saveFail()}}
+  }finally{writing[key]=false}
+}
+function saveWeek(i){persist("w"+i,wkState(i))}
+const SAVED_TXT="Your plan, ticks and weights are saved to your account.";
+function saveOk(){const n=$("saveNote");if(n.dataset.err){n.textContent=SAVED_TXT;n.style.color="";delete n.dataset.err}}
+function saveFail(){const n=$("saveNote");n.dataset.err="1";n.textContent="Couldn't sync your last change. It's kept on this device and will sync with your next change.";n.style.color="var(--fan)"}
+
+function onDocs(docs){
+  let changed=false;
+  for(const [id,raw] of Object.entries(docs)){
+    if(writing[id]||pending[id])continue;
+    const v=JSON.parse(JSON.stringify(raw));
+    if(id==="bench"){bench=v;changed=true}
+    else if(id==="weights"){weights=v;changed=true}
+    else if(id==="settings"){settings={unit:"lb",...v};changed=true}
+    else if(id==="program"){prog=v.active?v:null;applyProg();changed=true}
+    else if(/^w\d+$/.test(id)){weeks[+id.slice(1)]={plan:v.plan||null,notes:v.notes||[],done:v.done||{}};changed=true}
+  }
+  if(changed){local();if(!document.activeElement?.dataset?.wk&&!document.activeElement?.dataset?.bk)render()}
+}
+
+/* ---------- Claude ---------- */
+const getKey=()=>{try{return localStorage.getItem("tp.apikey")||""}catch(e){return ""}};
+const setKey=k=>{try{k?localStorage.setItem("tp.apikey",k):localStorage.removeItem("tp.apikey")}catch(e){}};
+async function askClaude(prompt,signal){
+  const key=getKey();
+  if(!key)throw {code:"no_key"};
+  let res;
+  try{
+    res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",signal,headers:{
+      "content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:MODEL,max_tokens:16000,messages:[{role:"user",content:prompt+"\n\nYour reply is parsed by a program: output only the JSON value, with no text or code fences around it."}]})});
+  }catch(e){throw {code:e&&e.name==="AbortError"?"cancelled":"network"}}
+  if(!res.ok){
+    const code=res.status===401||res.status===403?"bad_key":res.status===429?"rate_limited":res.status===529||res.status>=500?"overloaded":"upstream_error";
+    let msg="";try{msg=(await res.json()).error?.message||""}catch(e){}
+    throw {code,message:msg};
+  }
+  const data=await res.json();
+  const text=(data.content||[]).filter(c=>c.type==="text").map(c=>c.text).join("");
+  if(data.stop_reason==="max_tokens")throw {code:"invalid_json"};
+  return parseJson(text);
+}
+function parseJson(t){
+  t=String(t).trim();
+  try{return JSON.parse(t)}catch(e){}
+  const f=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(f){try{return JSON.parse(f[1])}catch(e){}}
+  const a=t.search(/[\{\[]/),b=Math.max(t.lastIndexOf("}"),t.lastIndexOf("]"));
+  if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}
+  throw {code:"invalid_json"};
+}
+function errCopy(e){const c=e&&e.code;return c==="cancelled"?"Stopped. Nothing changed.":
+  c==="no_key"?"Add your Claude API key in Settings first.":
+  c==="bad_key"?"Claude didn't accept the API key. Check it in Settings.":
+  c==="rate_limited"?"Too many requests just now. Try again in a minute.":
+  c==="overloaded"?"Claude is busy right now. Try again in a minute.":
+  c==="network"?"Couldn't reach Claude. Check your connection and try again.":
+  c==="invalid_json"?"The answer came back garbled. Try again.":
+  "Something went wrong reaching Claude. Try again."+(e&&e.message?" ("+e.message+")":"")}
+
+const PRINCIPLES=`You are a thoughtful personal trainer building and adjusting a weekly training plan for one person, who will read it on their phone.
+Principles:
+- Build everything around what the person says about their goals, schedule, equipment, likes and dislikes. Their words win over these defaults.
+- Every session starts with a SHORT warm-up: 2–3 items, about 3–5 minutes, specific to that session.
+- Progress gradually. Every 3–4 weeks, and around holidays, include a lighter week.
+- Include rest days. Avoid two hard days back to back. Missed sessions shift to a free day or drop; never stack them.
+- Weighted exercises: give each as [name, reps, suggested starting weight as a NUMBER in ${"${UNIT}"}] so the app shows a weight box. Reps go in the dose, never the weight. Bodyweight or cardio items are just [name, dose].
+- For cardio machines, give durations or distances the machine displays.
+- If they mention pain or injury, reduce load around it and suggest seeing a professional if it persists. Don't diagnose.
+- Speak to them as "you". Write punchy, plain English.`;
+const principles=()=>PRINCIPLES.replace("${UNIT}",settings.unit==="kg"?"kg":"lb");
+const programText=()=>principles()+(prog&&prog.profile?"\n\nWhat they told you about themselves and their goals:\n"+prog.profile:"")+(prog&&prog.rules?"\n\nStanding changes they have asked for (these override the defaults above):\n"+prog.rules:"");
+const SESSION_SHAPE=`{"id": short string, "tag": "bike"|"run"|"str"|"other", "kind": short label like "Strength", "Cardio", "Yoga", "Class", "title": string, "day": 0-6 (0=Mon) or "skip", "sum": "one-line summary", "warmup": [["exercise","dose"]], "cue": "one or two sentences of coaching", "items": [["exercise","dose"] or ["exercise","dose", startWeight]], "after": "optional finisher or note, or empty string", "mins": approximate total minutes including warm-up}`;
+const PLAN_SHAPE=`{"name": "a short, motivating name for the plan (2–4 words)", "ambition": "2–3 sentences: what this plan is for and how it works", "success": "one sentence: what success looks like in the final week", "summary": "2–3 short sentences to them about the plan or what changed", "rules": "their standing preferences, one short line each starting with '- '", "benchmarks": [up to 4 short labels for check-ins to fill in, e.g. "Plank hold · week 1 (s)"], "weeks": [one object per week: {"ph": "Base"|"Build"|"Peak"|"Lighter", "focus": "one or two sentences for the week", "vars": {token: value used in the template, e.g. "sets": 3, "walk": "35 min"}, "notes": {sessionId: closing note for that week}, "titles": {sessionId: title override for that week}}], "tpl": [the weekly session template: ${SESSION_SHAPE.replace(/"mins": approximate total minutes including warm-up/,'"mins": typical minutes')}. Template strings may contain {token} placeholders filled from each week's vars.]}`;
+
+/* ---------- time estimate ---------- */
+const durSec=t=>{t=String(t);let m=t.match(/(\d+):(\d+)\s*min/);if(m)return +m[1]*60+ +m[2];m=t.match(/(\d+(?:\.\d+)?)\s*min/);if(m)return m[1]*60;m=t.match(/(\d+)\s*s\b/);return m?+m[1]:0};
+const minsIn=t=>{let n=0;String(t).replace(/(\d+(?:\.\d+)?)\s*min/g,(_,x)=>{n+=+x});return n};
+function est(s){
+  if(Number(s.mins)>0)return Math.round(Number(s.mins)/5)*5||5;
+  const warm=(s.warmup||[]).reduce((a,r)=>/first/i.test(r[1])?a:a+(minsIn(r[1])||1),0);
+  const items=s.items||[];let main=0;
+  if(s.tag==="run"){const km=items.map(r=>String(r[1]).match(/(\d+(?:\.\d+)?)\s*km/)).find(Boolean);main=km?km[1]*6.5:items.reduce((a,r)=>a+minsIn(r[1]),0)}
+  else if(s.tag==="str"){const rounds=+((String(s.sum).match(/(\d+)\s*rounds?/)||[0,2])[1]);main=rounds*items.length*1.6}
+  else main=items.reduce((a,r)=>a+(minsIn(r[1])||1.5),0);
+  return Math.max(5,Math.round((warm+main+minsIn(s.after||""))/5)*5);
+}
+
+/* ---------- render ---------- */
+function sessionsFor(i){const st=wkState(i);return st.plan&&Array.isArray(st.plan.sessions)?st.plan.sessions:standard(i)}
+let justDone=null;
+function render(){
+  const signed=!!uid, has=!!(prog&&prog.active&&W.length);
+  $("gateSignin").hidden=signed; $("gateSetup").hidden=!signed||has; $("app").hidden=!signed||!has;
+  $("setupKeyWrap").hidden=!!getKey();
+  if(!signed||!has)return;
+  const w=W[wk], st=wkState(wk), ss=sessionsFor(wk), start=addDays(START,wk*7), dn=st.done||{};
+  const end=addDays(START,W.length*7-1);
+  $("eyebrow").textContent=`Ana Banana exercise plan · ${fmt(START)} – ${fmt(end)}`;
+  $("wtitle").textContent=`Week ${wk+1}`;
+  $("wphase").textContent=w.ph||"";
+  $("wdates").textContent=`${fmt(start)} – ${fmt(addDays(start,6))}`;
+  $("wfocus").textContent=w.focus||"";
+  const tuned=!!st.plan;
+  const b=$("badge");b.textContent=tuned?"Tailored":"Standard plan";b.className="badge"+(tuned?" tuned":"");
+  $("resetBtn").hidden=!tuned;
+  $("prev").disabled=wk===0;$("next").disabled=wk===W.length-1;
+  $("gotoToday").hidden=wk===curWeek;
+  $("askBtn").textContent=tuned?"Update my week":"Plan my week";
+  const sm=$("summary");sm.hidden=!(st.plan&&st.plan.summary);sm.textContent=st.plan?.summary||"";
+  $("history").hidden=!(st.notes&&st.notes.length);
+  $("historyList").innerHTML=(st.notes||[]).map(n=>`<li>${esc(n.text)}</li>`).join("");
+  $("ambTitle").textContent=prog.name?`The ambition · ${prog.name}`:"The ambition";
+  $("ambText").textContent=prog.ambition||"";
+  $("ambSuccess").textContent=prog.success?"Success: "+prog.success:"";
+  const ps=$("planSummary");ps.hidden=!prog.summary;ps.textContent=prog.summary||"";
+  $("planHistory").hidden=!(prog.notes&&prog.notes.length);
+  $("planHistoryList").innerHTML=(prog.notes||[]).map(n=>`<li>${esc(n.text)}</li>`).join("");
+  $("planMeta").textContent=prog.updated?`Plan last changed ${new Date(prog.updated).toLocaleDateString("en-US",{month:"short",day:"numeric"})}.`:"";
+  $("weeksTitle").textContent=`The ${W.length} weeks`;
+
+  const active=ss.filter(s=>s.day!=="skip");
+  $("prog").innerHTML=DAYS.map((_,i)=>{const h=active.filter(s=>s.day===i);
+    return h.length?h.map(s=>`<span class="${dn[s.id]?"on":""}"></span>`).join(""):`<span class="${dn["rest"+i]?"on":""}"></span>`}).join("");
+  const days=$("days");days.innerHTML="";
+  DAYS.forEach((d,i)=>{
+    const date=addDays(start,i), isToday=date.getTime()===now.getTime(), isPast=date<now;
+    const here=ss.filter(s=>s.day===i);
+    const el=document.createElement("div");el.className="day"+(isToday?" today":"")+(isPast?" past":"");
+    const allDone=here.length?here.every(s=>dn[s.id]):!!dn["rest"+i];
+    if(allDone)el.classList.add("alldone");
+    const chk=allDone?`<span class="daycheck ${justDone===wk+":"+i?"pop":""}" role="img" aria-label="Day done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>`:"";
+    const tot=here.reduce((a,s)=>a+est(s),0);
+    el.innerHTML=`<div class="dlabel"><b>${d}</b><small>${fmt(date)}</small>${tot?`<span class="dur">${tot} min</span>`:""}${chk}</div><div class="slot">${here.length?here.map(s=>card(s,dn)).join("")+howTo(here):restCard(i,dn)}</div>`;
+    days.appendChild(el);
+  });
+  const sk=ss.filter(s=>s.day==="skip");
+  $("skipped").innerHTML=sk.length?`<div class="eyebrow">Dropped this week</div>`+sk.map(s=>card(s,dn)).join(""):"";
+  const ph=$("phases");ph.style.setProperty("--n",W.length);
+  ph.innerHTML=W.map((x,i)=>`<button class="${phc(x.ph)} ${i===wk?"cur":""}" data-w="${i}" aria-label="Week ${i+1}, ${esc(x.ph)}">${i+1}</button>`).join("");
+  renderBench();
+  $("unit").value=settings.unit||"lb";
+}
+function renderBench(){
+  const labels=Array.isArray(prog.benchmarks)?prog.benchmarks:[];
+  $("benchFold").hidden=!labels.length;
+  const box=$("bench");
+  if(box.dataset.sig===JSON.stringify(labels))return;
+  box.dataset.sig=JSON.stringify(labels);
+  box.innerHTML=labels.map((l,i)=>`<label for="b${i}">${esc(l)}<input id="b${i}" data-bk="${i}" value="${esc(bench[i]||"")}" placeholder="—"></label>`).join("");
+}
+function restCard(i,dn){
+  const rid="rest"+i, ro=open.has(wk+":"+rid), rd=!!dn[rid];
+  return `<div class="card ${ro?"open":""} ${rd?"done":""}">
+    <button class="chead" data-t="${rid}" aria-expanded="${ro}"><span class="tag rest">Rest</span>
+      <span class="cbody"><span class="ctitle">Rest day</span><span class="csum">Walk, move gently, stretch</span></span><span class="chev">›</span></button>
+    ${ro?`<div class="detail">
+      <p class="cue">Keep moving lightly. A walk counts. Add a stretch or a yin session if your body wants it.</p>
+      <div class="restlinks"><a href="${yt("Mady Morrison 15 minute full body stretch english")}" target="_blank" rel="noopener">15-min stretch ↗</a><a href="${yt("Travis Eliot yin yoga 45 minute full body")}" target="_blank" rel="noopener">45-min yin yoga ↗</a></div>
+      <div class="actions"><button class="btn primary" data-d="${rid}">${rd?"Undo":"Mark done"}</button></div></div>`:""}
+  </div>`;
+}
+const yt=q=>"https://www.youtube.com/results?search_query="+encodeURIComponent(q);
+const SKIP=/^(hard|easy|repeat|cool|very easy|brisk walk|build to|rest)/i;
+function howTo(sessions){
+  const names=new Map();
+  sessions.forEach(s=>{
+    [...(s.warmup||[]),...(s.items||[])].forEach(r=>{
+      const raw=String(r[0]);
+      if(SKIP.test(raw)||/jog|pedal/i.test(raw))return;
+      const n=raw.split(",")[0].replace(/\s*\(.*?\)/g,"").replace(/^cable machine:\s*/i,"Cable ").trim();
+      if(n&&!names.has(n))names.set(n,raw.split(",")[0].replace(/\(.*?\)/g,"").replace(/^cable machine:\s*/i,"cable ")+" proper form");
+    });
+  });
+  if(!names.size)return "";
+  return `<details class="howto"><summary>Form videos</summary><div class="howlinks">${[...names].map(([l,q])=>`<a href="${yt(q)}" target="_blank" rel="noopener">${esc(l)}</a>`).join("")}</div></details>`;
+}
+function list(rows,sid){
+  const u=settings.unit==="kg"?"kg":"lb", step=u==="kg"?2.5:5;
+  return `<div class="ex ${sid?"":"warm"}">${(rows||[]).map(r=>{
+  const base=`<span class="exname">${esc(r[0])}</span><span class="exdose">${esc(r[1])}</span>`;
+  const weighted=sid&&r.length>2&&r[2]!==""&&r[2]!=null&&isFinite(Number(r[2]));
+  if(!weighted)return `<div class="exrow">${base}</div>`;
+  const k=slug(r[0]), rec=weights[k], val=rec?rec.v:Number(r[2]), id=`wt-${esc(sid)}-${k}`;
+  const last=rec?`Last used ${rec.v} ${u} · ${new Date(rec.at).toLocaleDateString("en-US",{month:"short",day:"numeric"})}. Felt easy for every set? Add ${step}.`:`Suggested start. Adjust to what you actually lift.`;
+  return `<div class="exrow">${base}<span class="wt"><button type="button" data-wk="${k}" data-start="${Number(r[2])}" data-step="-${step}" aria-label="${step} ${u} lighter">−</button><input id="${id}" data-wk="${k}" inputmode="decimal" value="${val}" aria-label="${esc(r[0])} weight in ${u}"><button type="button" data-wk="${k}" data-start="${Number(r[2])}" data-step="${step}" aria-label="${step} ${u} heavier">+</button><span class="unit">${u}</span><span class="last ${rec?"":"new"}">${last}</span></span></div>`;
+}).join("")}</div>`}
+let wT;
+function setWeight(k,v,rerender){
+  v=Math.max(0,Math.round(Number(v)*2)/2); if(!isFinite(v))return;
+  weights[k]={v,at:new Date().toISOString()};
+  document.querySelectorAll(`input[data-wk="${k}"]`).forEach(el=>{if(el!==document.activeElement)el.value=v});
+  clearTimeout(wT);wT=setTimeout(()=>persist("weights",weights),700);
+  if(rerender)render();
+}
+function card(s,dn){
+  const k=wk+":"+s.id, isOpen=open.has(k), isDone=!!dn[s.id];
+  const tag=["bike","run","str"].includes(s.tag)?s.tag:"other";
+  const opts=DAYS.map((d,i)=>`<option value="${i}" ${s.day===i?"selected":""}>${d}</option>`).join("")+`<option value="skip" ${s.day==="skip"?"selected":""}>Drop</option>`;
+  return `<div class="card ${isOpen?"open":""} ${isDone?"done":""}">
+    <button class="chead" data-t="${esc(s.id)}" aria-expanded="${isOpen}"><span class="tag ${tag}">${esc(s.kind||tag)}</span>
+      <span class="cbody"><span class="ctitle">${esc(s.title)}</span><span class="csum">${esc(s.sum)}</span></span><span class="chev">›</span></button>
+    ${isOpen?`<div class="detail">
+      ${s.warmup&&s.warmup.length?`<div class="block"><h3>Warm-up</h3>${list(s.warmup)}</div>`:""}
+      <div class="block"><h3>Workout</h3>${s.cue?`<p class="cue">${esc(s.cue)}</p>`:""}${list(s.items,s.id)}</div>
+      ${s.after?`<p style="font-size:14px">${esc(s.after)}</p>`:""}
+      <div class="actions"><button class="btn primary" data-d="${esc(s.id)}">${isDone?"Undo":"Mark done"}</button>
+      <label class="move" for="mv-${esc(s.id)}">Move to <select id="mv-${esc(s.id)}" data-m="${esc(s.id)}">${opts}</select></label></div></div>`:""}
+  </div>`;
+}
+function confetti(px,py){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const CW=document.documentElement.clientWidth, CH=520, top=Math.max(0,py-420), x=px, y=py-top;
+  let cv=document.getElementById("confetti");
+  if(!cv){cv=document.createElement("canvas");cv.id="confetti";document.body.appendChild(cv)}
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=CW*dpr;cv.height=CH*dpr;cv.style.width=CW+"px";cv.style.height=CH+"px";cv.style.top=top+"px";
+  const g=cv.getContext("2d");if(!g)return;g.setTransform(dpr,0,0,dpr,0,0);
+  const cs=getComputedStyle(document.documentElement);
+  const cols=["--fan","--ok","--moss","--steel"].map(v=>cs.getPropertyValue(v).trim()).concat(["#F4C430"]);
+  const P=Array.from({length:120},()=>{const a=-Math.PI/2+(Math.random()-.5)*Math.PI*1.1,v=6+Math.random()*9;
+    return {x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,w:5+Math.random()*6,h:8+Math.random()*8,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:cols[Math.floor(Math.random()*cols.length)]}});
+  const t0=performance.now();
+  (function step(t){
+    g.clearRect(0,0,CW,CH);let alive=false;
+    P.forEach(p=>{p.vy+=.28;p.vx*=.985;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;
+      if(p.y<CH+20){alive=true;g.save();g.translate(p.x,p.y);g.rotate(p.r);g.fillStyle=p.c;g.globalAlpha=Math.max(0,1-(t-t0)/2600);g.fillRect(-p.w/2,-p.h/2,p.w,p.h*Math.abs(Math.cos(p.r*2)));g.restore()}});
+    if(alive&&t-t0<2600)requestAnimationFrame(step);else{g.clearRect(0,0,CW,CH);cv.remove()}
+  })(t0);
+}
+
+/* ---------- interactions ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-t]"),d=e.target.closest("[data-d]"),w=e.target.closest("[data-w]"),c=e.target.closest(".chip");
+  const ws=e.target.closest("button[data-step]");
+  if(ws){const k=ws.dataset.wk;const cur=weights[k]?weights[k].v:Number(ws.dataset.start)||0;setWeight(k,cur+Number(ws.dataset.step),true);return}
+  if(t){const k=wk+":"+t.dataset.t;open.has(k)?open.delete(k):open.add(k);render()}
+  else if(d){const st=wkState(wk);st.done=st.done||{};const id=d.dataset.d;const nowDone=!st.done[id];st.done[id]=nowDone;saveWeek(wk);
+    let r=null;
+    if(nowDone){if(id.startsWith("rest"))justDone=wk+":"+id.slice(4);else{const s=sessionsFor(wk).find(x=>x.id===id);justDone=s&&s.day!=="skip"?wk+":"+s.day:null}r=d.getBoundingClientRect()}
+    render();justDone=null;
+    if(r){try{confetti(r.left+r.width/2+scrollX,r.top+r.height/2+scrollY)}catch(_){}}}
+  else if(w){wk=+w.dataset.w;render()}
+  else if(c){const a=c.closest("form").querySelector("textarea");a.value=(a.value?a.value.trim()+" ":"")+c.textContent;a.focus()}
+});
+document.addEventListener("change",e=>{
+  const wi=e.target.closest("input[data-wk]");if(wi){setWeight(wi.dataset.wk,wi.value,true);return}
+  const m=e.target.closest("[data-m]");if(!m)return;
+  const st=wkState(wk);if(!st.plan)st.plan={sessions:JSON.parse(JSON.stringify(standard(wk))),summary:""};
+  const s=st.plan.sessions.find(x=>x.id===m.dataset.m);if(s){s.day=m.value==="skip"?"skip":+m.value;saveWeek(wk);render()}});
+let benchT;
+document.addEventListener("input",e=>{const bi=e.target.closest("input[data-bk]");if(!bi)return;bench[bi.dataset.bk]=bi.value;clearTimeout(benchT);benchT=setTimeout(()=>persist("bench",bench),700)});
+$("prev").onclick=()=>{if(wk>0){wk--;render()}};
+$("next").onclick=()=>{if(wk<W.length-1){wk++;render()}};
+$("gotoToday").onclick=()=>{wk=curWeek;render()};
+$("resetBtn").onclick=()=>{const st=wkState(wk);st.plan=null;saveWeek(wk);render()};
+$("apiKey").addEventListener("change",e=>{setKey(e.target.value.trim());render()});
+$("unit").addEventListener("change",e=>{settings.unit=e.target.value;persist("settings",settings);render()});
+$("signInBtn").onclick=async()=>{$("signinMsg").textContent="Opening Google sign-in…";try{await fp.signIn()}catch(e){$("signinMsg").textContent=(e&&e.userMsg)||"Sign-in didn't complete. Try again."}};
+$("signOutBtn").onclick=()=>fp.signOut();
+$("emailForm").onsubmit=async e=>{e.preventDefault();const em=$("signinEmail").value.trim();if(!em)return;
+  $("emailBtn").disabled=true;$("signinMsg").textContent="Sending…";
+  try{await fp.sendLink(em);$("signinMsg").textContent=`Check ${em} for a sign-in link (look in Junk too). Open it on this device.`}
+  catch(err){$("signinMsg").textContent=(err&&err.userMsg)||"Couldn't send the link. Check the address and try again."}
+  finally{$("emailBtn").disabled=false}};
+let startOverArmed=false;
+$("startOverBtn").onclick=()=>{
+  if(!startOverArmed){startOverArmed=true;$("startOverBtn").textContent="Tap again to delete this plan";$("startOverMsg").textContent="Your ticks and notes for this plan go too. Weights are kept.";setTimeout(()=>{startOverArmed=false;$("startOverBtn").textContent="Start a new plan";$("startOverMsg").textContent=""},6000);return}
+  startOverArmed=false;$("startOverBtn").textContent="Start a new plan";$("startOverMsg").textContent="";
+  prog={active:false};persist("program",prog);
+  Object.keys(weeks).forEach(i=>{weeks[i]={plan:null,notes:[],done:{}};saveWeek(+i)});
+  applyProg();wk=0;render();scrollTo(0,0);
+};
+
+/* ---------- set up a new plan ---------- */
+let sctl=null;
+$("setupStop").onclick=()=>sctl?.abort();
+$("setupBtn").onclick=async()=>{
+  const st=$("setupStatus"), msg=$("setupAsk").value.trim(), keyIn=$("setupKey").value.trim();
+  if(keyIn)setKey(keyIn);
+  if(!msg){st.textContent="Tell Claude a little about yourself first.";st.className="status err";return}
+  if(!getKey()){st.textContent="Add your Claude API key to continue.";st.className="status err";return}
+  const startMon=todayIdx<=2?mondayOf(now):addDays(mondayOf(now),7);
+  const prompt=`${principles()}
+
+Today is ${DAYS[todayIdx]} ${iso(now)}. The plan starts on Monday ${iso(startMon)}.
+
+What they told you about themselves and their goals:
+<<<${msg}>>>
+
+Design their plan. Choose a length that fits their goal (usually 6–12 weeks). Use a weekly session template plus per-week values so it progresses week to week. Put rest days where they make sense; days without a session show as rest days.
+
+Reply with ONLY a JSON object of this shape:
+${PLAN_SHAPE}`;
+  sctl=new AbortController();
+  $("setupBtn").disabled=true;$("setupStop").hidden=false;st.className="status";st.textContent="Building your plan… this can take a minute or two.";
+  try{
+    const out=await askClaude(prompt,sctl.signal);
+    const clean=validateProg(out,true);
+    if(!clean){st.textContent="That plan came back incomplete. Try again.";st.className="status err";return}
+    prog={active:true,start:iso(startMon),profile:msg,...clean,notes:[],updated:new Date().toISOString()};
+    weeks={};applyProg();wk=curWeek;persist("program",prog);
+    st.textContent="";$("setupAsk").value="";render();scrollTo(0,0);
+  }catch(e){st.className=e&&e.code==="cancelled"?"status":"status err";st.textContent=errCopy(e)}
+  finally{$("setupBtn").disabled=false;$("setupStop").hidden=true;sctl=null}
+};
+
+/* ---------- adjust my week ---------- */
+let ctl=null;
+$("stopBtn").onclick=()=>ctl?.abort();
+$("askForm").addEventListener("submit",async ev=>{
+  ev.preventDefault();
+  const status=$("status"), box=$("ask"), msg=box.value.trim();
+  if(!msg){status.textContent="Type a line about your week first.";status.className="status err";box.focus();return}
+  const i=wk, st=wkState(i), base=sessionsFor(i), start=addDays(START,i*7);
+  const dayNames=DAYS.map((d,j)=>`${j}=${d} ${fmt(addDays(start,j))}`).join(", ");
+  const todayLine=(i===curWeek&&now>=START)?`Today is ${DAYS[todayIdx]} (day ${todayIdx}). Days before ${todayIdx} are in the past: only sessions already marked done may stay on past days; move anything undone from the past forward or drop it.`:(start<now&&i<curWeek?"This week is in the past.":"This week is in the future.");
+  const prompt=`${programText()}
+
+WEEK ${i+1} of ${W.length} · phase: ${W[i].ph} · ${W[i].focus}
+This week's values: ${JSON.stringify(W[i].vars||{})}
+Day indexes: ${dayNames}.
+${todayLine}
+
+The standard sessions for this week (keep their warm-ups, exercises and doses unless their situation calls for a change):
+${JSON.stringify(standard(i))}
+
+The current plan for this week:
+${JSON.stringify(base)}
+
+Their current working weights in ${settings.unit||"lb"}: ${JSON.stringify(Object.fromEntries(Object.entries(weights).map(([k,v])=>[k,v.v])))}
+
+Sessions already marked DONE (keep them exactly as they are, same id and day): ${JSON.stringify(Object.keys(st.done||{}).filter(k=>st.done[k]&&!k.startsWith("rest")))}
+
+What they told you earlier this week, oldest first:
+${(st.notes||[]).map(n=>"- "+n.text).join("\n")||"(nothing yet)"}
+
+What they say now:
+<<<${msg}>>>
+
+Rebuild the week. Reply with ONLY a JSON object: {"summary": "2–3 short, plain sentences on what you changed and why", "sessions": [${SESSION_SHAPE}]}
+Keep existing ids for sessions you keep; new sessions get a new short id. Use "skip" for a session dropped this week. At most one session per day unless they ask otherwise.`;
+  ctl=new AbortController();
+  $("askBtn").disabled=true;$("stopBtn").hidden=false;status.className="status";status.textContent="Thinking about your week…";
+  try{
+    const out=await askClaude(prompt,ctl.signal);
+    const clean=validateWeek(out,st.done||{},base);
+    if(!clean){status.textContent="That plan came back incomplete. Try again, maybe with a shorter note.";status.className="status err";return}
+    st.plan=clean; st.notes=[...(st.notes||[]),{text:msg,at:new Date().toISOString()}].slice(-20);
+    saveWeek(i); box.value=""; status.textContent="Week updated."; wk=i; render();
+  }catch(e){status.className=e&&e.code==="cancelled"?"status":"status err";status.textContent=errCopy(e)}
+  finally{$("askBtn").disabled=false;$("stopBtn").hidden=true;ctl=null}
+});
+
+/* ---------- adjust the whole plan ---------- */
+let pctl=null;
+$("planStop").onclick=()=>pctl?.abort();
+$("planForm").addEventListener("submit",async ev=>{
+  ev.preventDefault();
+  const pStatus=$("planStatus"), box=$("planAsk"), msg=box.value.trim();
+  if(!msg){pStatus.textContent="Type what you'd like to change first.";pStatus.className="status err";box.focus();return}
+  const notes=prog.notes||[];
+  const prompt=`${programText()}
+
+The plan "${prog.name||""}" has ${W.length} weeks, week 1 starting Monday ${prog.start}. They are currently in week ${curWeek+1}. Leave weeks before week ${curWeek+1} unchanged.
+Ambition: ${prog.ambition||""} Success: ${prog.success||""}
+Benchmarks: ${JSON.stringify(prog.benchmarks||[])}
+
+WEEKS (one object per week, in order):
+${JSON.stringify(W)}
+
+WEEKLY SESSION TEMPLATE (strings may contain {token} placeholders filled from each week's vars):
+${JSON.stringify(TPL)}
+
+Earlier plan requests, oldest first:
+${notes.map(n=>"- "+n.text).join("\n")||"(none)"}
+
+What they ask for now:
+<<<${msg}>>>
+
+Rework the plan to match. You may change the number of weeks if they ask. Keep the ids of sessions you keep. Keep "rules" as the complete updated list of their standing preferences, including earlier ones that still apply. Reply with ONLY a JSON object of this shape:
+${PLAN_SHAPE}`;
+  pctl=new AbortController();
+  $("planBtn").disabled=true;$("planStop").hidden=false;pStatus.className="status";pStatus.textContent="Thinking about the whole plan… this can take a minute.";
+  try{
+    const out=await askClaude(prompt,pctl.signal);
+    const clean=validateProg(out,false);
+    if(!clean){pStatus.textContent="That plan came back incomplete. Try again, maybe with a shorter request.";pStatus.className="status err";return}
+    prog={...prog,...clean,active:true,notes:[...notes,{text:msg,at:new Date().toISOString()}].slice(-20),updated:new Date().toISOString()};
+    applyProg(); persist("program",prog);
+    for(let j=curWeek+1;j<W.length;j++){const s=weeks[j];if(s&&s.plan){s.plan=null;saveWeek(j)}}
+    box.value="";pStatus.className="status";
+    pStatus.textContent=wkState(curWeek).plan?"Plan updated. This week keeps its tailored version. Tap \"Go back to the standard plan\" near the top to switch it over.":"Plan updated.";
+    render();
+  }catch(e){pStatus.className=e&&e.code==="cancelled"?"status":"status err";pStatus.textContent=errCopy(e)}
+  finally{$("planBtn").disabled=false;$("planStop").hidden=true;pctl=null}
+});
+
+/* ---------- validation ---------- */
+function normRows(a){return Array.isArray(a)?a.filter(r=>Array.isArray(r)&&r.length>=1).map(r=>{const o=[String(r[0]),String(r[1]??"")];if(r.length>2&&r[2]!==""&&r[2]!=null&&isFinite(Number(r[2])))o.push(Number(r[2]));return o}).slice(0,14):[]}
+function normSession(s,n){
+  let day=s.day==="skip"?"skip":Math.round(Number(s.day)); if(day!=="skip"&&!(day>=0&&day<=6))day="skip";
+  const o={id:String(s.id||("s"+n)).replace(/[^\w-]/g,"").slice(0,24)||("s"+n),tag:String(s.tag||"other"),kind:String(s.kind||"Session"),title:String(s.title||"Session"),day,
+    sum:String(s.sum||""),warmup:normRows(s.warmup),cue:String(s.cue||""),items:normRows(s.items),after:String(s.after||"")};
+  if(Number(s.mins)>0&&Number(s.mins)<300)o.mins=Math.round(Number(s.mins));
+  return o;
+}
+function validateWeek(o,done,base){
+  if(!o||!Array.isArray(o.sessions)||!o.sessions.length)return null;
+  const seen=new Set();
+  const out=o.sessions.slice(0,12).map((s,n)=>{const x=normSession(s||{},n);while(seen.has(x.id))x.id+="x";seen.add(x.id);return x});
+  Object.keys(done).filter(k=>done[k]&&!k.startsWith("rest")).forEach(k=>{
+    const orig=base.find(b=>b.id===k); if(!orig)return;
+    const j=out.findIndex(x=>x.id===k); if(j<0)out.push(orig); else out[j]={...out[j],day:orig.day};
+  });
+  return {sessions:out,summary:String(o.summary||"").slice(0,600)};
+}
+function validateProg(o,fresh){
+  if(!o||!Array.isArray(o.weeks)||!o.weeks.length||o.weeks.length>20||!Array.isArray(o.tpl)||!o.tpl.length)return null;
+  const strMap=m=>m&&typeof m==="object"&&!Array.isArray(m)?Object.fromEntries(Object.entries(m).slice(0,20).map(([k,v])=>[String(k),String(v)])):{};
+  const varMap=m=>m&&typeof m==="object"&&!Array.isArray(m)?Object.fromEntries(Object.entries(m).slice(0,30).map(([k,v])=>[String(k).replace(/\W/g,""),typeof v==="number"?v:String(v)])):{};
+  const weeksOut=o.weeks.map(w=>{w=w||{};return {ph:["Base","Build","Peak","Lighter"].includes(w.ph)?w.ph:"Base",focus:String(w.focus||"").slice(0,300),vars:varMap(w.vars),notes:strMap(w.notes),titles:strMap(w.titles)}});
+  if(!fresh)for(let i=0;i<Math.min(curWeek,W.length,weeksOut.length);i++)weeksOut[i]=W[i];
+  const seen=new Set();
+  const tpl=o.tpl.slice(0,12).map((s,n)=>{const x=normSession(s||{},n);while(seen.has(x.id))x.id+="x";seen.add(x.id);if(x.day==="skip")x.day=6;return x});
+  return {weeks:weeksOut,tpl,name:String(o.name||"").slice(0,60),ambition:String(o.ambition||"").slice(0,600),success:String(o.success||"").slice(0,300),
+    rules:String(o.rules||"").slice(0,1500),summary:String(o.summary||"").slice(0,600),
+    benchmarks:Array.isArray(o.benchmarks)?o.benchmarks.slice(0,4).map(String):[]};
+}
+
+/* ---------- start ---------- */
+$("apiKey").value=getKey();
+render();
+fp.onUser(async u=>{
+  uid=u?u.uid:null;
+  $("whoami").textContent=u?(u.email||""):"";
+  weeks={};bench={};weights={};prog=null;settings={unit:"lb"};applyProg();
+  if(uid){loadLocal();wk=curWeek;fp.watch(uid,onDocs)}
+  render();
+});
+</script>
+</body>
+</html>
