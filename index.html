@@ -299,6 +299,15 @@ select,input,textarea{border-radius:12px}
 .phases button.cur{outline:2px solid var(--fan)}
 .hint a,.danger{color:var(--fan)}
 button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--fan);outline-offset:2px}
+.dayopen{align-self:flex-start;border:1px dashed var(--fan);background:transparent;color:var(--fan);border-radius:999px;padding:6px 14px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.dayopen::before{content:"✦ ";color:var(--steel)}
+.dayopen:hover{background:var(--fan-soft)}
+.dayform{display:flex;flex-direction:column;gap:10px;background:var(--fan-soft);border-radius:20px;padding:14px}
+.dayform textarea{width:100%;resize:vertical;font:inherit;font-size:16px;line-height:1.4;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.dayform .chip{background:var(--surface);border-color:var(--surface)}
+.dayform .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.daynote{font-size:14px;color:var(--ink);background:var(--ok-soft);border-radius:14px;padding:8px 12px}
+.daynote.err{background:var(--fan-soft);color:var(--fan)}
 </style>
 </head>
 <body>
@@ -527,7 +536,7 @@ function onDocs(docs){
     else if(id==="program"){const first=!(prog&&prog.active);prog=v.active?v:null;applyProg();if(first)wk=curWeek;changed=true}
     else if(/^w\d+$/.test(id)){weeks[+id.slice(1)]={plan:v.plan||null,notes:v.notes||[],done:v.done||{}};changed=true}
   }
-  if(changed){local();if(!document.activeElement?.dataset?.wk&&!document.activeElement?.dataset?.bk)render()}
+  if(changed){local();if(!document.activeElement?.dataset?.wk&&!document.activeElement?.dataset?.bk&&!dayBusy())render()}
 }
 
 /* ---------- Claude ---------- */
@@ -646,7 +655,7 @@ function render(){
     if(allDone)el.classList.add("alldone");
     const chk=allDone?`<span class="daycheck ${justDone===wk+":"+i?"pop":""}" role="img" aria-label="Day done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>`:"";
     const tot=here.reduce((a,s)=>a+est(s),0);
-    el.innerHTML=`<div class="dlabel"><b>${d}</b><small>${fmt(date)}</small>${tot?`<span class="dur">${tot} min</span>`:""}${chk}</div><div class="slot">${here.length?here.map(s=>card(s,dn)).join("")+howTo(here):restCard(i,dn)}</div>`;
+    el.innerHTML=`<div class="dlabel"><b>${d}</b><small>${fmt(date)}</small>${tot?`<span class="dur">${tot} min</span>`:""}${chk}</div><div class="slot">${here.length?here.map(s=>card(s,dn)).join("")+howTo(here):restCard(i,dn)}${isPast&&!isToday?"":dayAsk(i,isToday)}</div>`;
     days.appendChild(el);
   });
   const sk=ss.filter(s=>s.day==="skip");
@@ -832,6 +841,74 @@ ${PLAN_SHAPE}`;
   }catch(e){st.className=e&&e.code==="cancelled"?"status":"status err";st.textContent=errCopy(e)}
   finally{$("setupBtn").disabled=false;$("setupStop").hidden=true;sctl=null}
 };
+
+/* ---------- change one day, on the fly ---------- */
+// Each upcoming day has "Change this day": a quick note (or a tap on a chip) and Claude reworks that day only.
+const dayOpen=new Set(), dayDraft={}, dayMsg={}; let dctl=null, dayRunning=null;
+const dayBusy=()=>!!dayRunning||document.activeElement?.dataset?.dk!=null;
+const DAY_CHIPS=["Machine's taken, swap it","Sunny out, I'd rather run","Only 20 minutes","Feeling tired, go gentle","Feeling great, push me a bit"];
+function dayAsk(i,isToday){
+  const k=wk+":"+i, o=dayOpen.has(k), busy=dayRunning===k, m=dayMsg[k];
+  if(!o)return `<button type="button" class="dayopen" data-dayopen="${i}">${isToday?"Change today's workout":"Change this day"}</button>${m?`<p class="daynote ${m.err?"err":""}" role="status">${esc(m.text)}</p>`:""}`;
+  return `<form class="dayform" data-dayform="${i}">
+    <label class="field" for="dk-${i}">${isToday?"What's up today?":"What should change on "+DAYS[i]+"?"}
+      <textarea id="dk-${i}" data-dk="${i}" rows="2" placeholder="E.g. The rower is taken. Or: it's gorgeous out, can I go for a run instead?">${esc(dayDraft[k]||"")}</textarea></label>
+    <div class="chips">${DAY_CHIPS.map(c=>`<button type="button" class="chip" data-daychip="${i}">${esc(c)}</button>`).join("")}</div>
+    <div class="row"><button class="btn primary" type="submit" ${busy?"disabled":""}>${busy?"Changing…":"Change it"}</button>
+      <button class="btn" type="button" data-dayclose="${i}">${busy?"Stop":"Cancel"}</button>
+      ${m?`<span class="status ${m.err?"err":""}" role="status">${esc(m.text)}</span>`:""}</div>
+  </form>`;
+}
+document.addEventListener("input",e=>{const t=e.target.closest("[data-dk]");if(t)dayDraft[wk+":"+t.dataset.dk]=t.value});
+document.addEventListener("click",e=>{
+  const op=e.target.closest("[data-dayopen]"),cl=e.target.closest("[data-dayclose]"),ch=e.target.closest("[data-daychip]");
+  if(op){const k=wk+":"+op.dataset.dayopen;dayOpen.add(k);delete dayMsg[k];render();document.getElementById("dk-"+op.dataset.dayopen)?.focus();e.stopImmediatePropagation()}
+  else if(cl){const k=wk+":"+cl.dataset.dayclose;if(dayRunning===k){dctl?.abort();return}dayOpen.delete(k);delete dayMsg[k];render();e.stopImmediatePropagation()}
+  else if(ch){const i=ch.dataset.daychip,k=wk+":"+i,t=document.getElementById("dk-"+i);
+    t.value=(t.value?t.value.trim()+" ":"")+ch.textContent;dayDraft[k]=t.value;t.focus();e.stopImmediatePropagation()}
+},true);
+document.addEventListener("submit",async ev=>{
+  const f=ev.target.closest("[data-dayform]");if(!f)return;ev.preventDefault();
+  const d=+f.dataset.dayform, i=wk, k=i+":"+d, msg=(dayDraft[k]||"").trim();
+  if(!msg){dayMsg[k]={text:"Type a quick note or tap one of the suggestions.",err:true};render();return}
+  if(dayRunning)return;
+  const st=wkState(i), base=sessionsFor(i), start=addDays(START,i*7), date=addDays(start,d);
+  const isToday=date.getTime()===now.getTime();
+  const doneIds=Object.keys(st.done||{}).filter(x=>st.done[x]&&!x.startsWith("rest"));
+  const prompt=`${programText()}
+
+WEEK ${i+1} of ${W.length} · phase: ${W[i].ph} · ${W[i].focus}
+Day indexes: ${DAYS.map((x,j)=>`${j}=${x} ${fmt(addDays(start,j))}`).join(", ")}.
+
+The current plan for this week:
+${JSON.stringify(base)}
+
+Their current working weights in ${settings.unit||"lb"}: ${JSON.stringify(Object.fromEntries(Object.entries(weights).map(([a,v])=>[a,v.v])))}
+Sessions already marked DONE (keep them exactly as they are, same id and day): ${JSON.stringify(doneIds)}
+
+They're asking about ${DAYS[d]} ${fmt(date)} (day index ${d})${isToday?", which is TODAY. They may be at the gym right now, mid-workout, so keep it quick to follow":""}.
+What they say:
+<<<${msg}>>>
+
+Change that day the way they ask. Rules:
+- Leave every other day exactly as it is, with one exception: if they want to do a session from another day today (for example the run, because the weather is good), move it here and take it off its old day. If that leaves two hard days back to back, make the smallest sensible fix elsewhere.
+- Swapping a machine or exercise: replace only that item with the closest equivalent at a similar effort and time, and keep the session's id and the rest of it.
+- Keep it realistic for the time they have, and keep the warm-up short.
+- The summary is ONE short, friendly sentence on what changed.
+Reply with ONLY a JSON object: {"summary": "...", "sessions": [${SESSION_SHAPE}]} listing ALL of this week's sessions after the change. Keep existing ids for sessions you keep; new sessions get a new short id. Use "skip" for a dropped session.`;
+  dctl=new AbortController(); dayRunning=k; dayMsg[k]={text:isToday?"Reworking today…":"Reworking "+DAYS[d]+"…"}; render();
+  try{
+    const out=await askClaude(prompt,dctl.signal);
+    const clean=validateWeek(out,st.done||{},base);
+    if(!clean){dayMsg[k]={text:"That came back incomplete. Try again.",err:true};return}
+    st.plan={...clean,summary:st.plan?.summary||clean.summary};
+    st.notes=[...(st.notes||[]),{text:`${DAYS[d]}: ${msg}`,at:new Date().toISOString()}].slice(-20);
+    saveWeek(i); delete dayDraft[k]; dayOpen.delete(k);
+    dayMsg[k]={text:String(out.summary||"Done, "+DAYS[d]+" is updated.").slice(0,240)};
+    open.clear();
+  }catch(e){dayMsg[k]={text:errCopy(e),err:!(e&&e.code==="cancelled")}}
+  finally{dayRunning=null;dctl=null;render()}
+});
 
 /* ---------- adjust my week ---------- */
 let ctl=null;
