@@ -7,9 +7,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Ana Banana">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2323924F'/%3E%3Cpath d='M18 33l9 9 19-20' fill='none' stroke='white' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%237C4DDB'/%3E%3Cpath d='M18 33l9 9 19-20' fill='none' stroke='white' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
 <style>
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}
@@ -208,13 +208,104 @@ section.panel h2{font-size:24px;font-weight:700}
 .danger{color:var(--fan)}
 @media (max-width:600px){.settings{grid-template-columns:1fr}}
 </style>
+<style>
+/* Ana Banana theme: lilac page, deep plum ink, violet actions, banana yellow for finished days.
+   The week header is the one bold block; everything else stays soft and quiet. */
+:root{
+  --bg:#F4EFFC; --surface:#FFFFFF; --ink:#2B1E40; --muted:#76698E; --line:#E6DCF5;
+  --fan:#7C4DDB; --fan-soft:#EEE5FE; --on-fan:#FFFFFF;
+  --moss:#1F8F72; --moss-soft:#DCF4EB; --steel:#B4467F; --steel-soft:#FCE6F1;
+  --ok:#FFCC33; --ok-soft:#FFF5CC; --on-ok:#3B2A00;
+  --hero:#6E3FD1; --hero-ink:#FFFFFF; --hero-soft:rgba(255,255,255,.22);
+  --display:"Fredoka","Nunito",ui-rounded,system-ui,sans-serif;
+  --body:"Nunito",ui-rounded,system-ui,-apple-system,sans-serif;
+  --mono:"Nunito",ui-rounded,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1A1325; --surface:#241B33; --ink:#F2EBFC; --muted:#B3A6C9; --line:#3A2E4E;
+  --fan:#B79BFF; --fan-soft:#33265A; --on-fan:#1A1325;
+  --moss:#6FD9B5; --moss-soft:#1B3A31; --steel:#F59AC6; --steel-soft:#45233A;
+  --ok:#FFD54D; --ok-soft:#3A3115; --on-ok:#2A1F00;
+  --hero:#4C2C93; --hero-ink:#F7F1FF; --hero-soft:rgba(255,255,255,.14); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1A1325; --surface:#241B33; --ink:#F2EBFC; --muted:#B3A6C9; --line:#3A2E4E;
+  --fan:#B79BFF; --fan-soft:#33265A; --on-fan:#1A1325;
+  --moss:#6FD9B5; --moss-soft:#1B3A31; --steel:#F59AC6; --steel-soft:#45233A;
+  --ok:#FFD54D; --ok-soft:#3A3115; --on-ok:#2A1F00;
+  --hero:#4C2C93; --hero-ink:#F7F1FF; --hero-soft:rgba(255,255,255,.14); color-scheme:dark}
+body{font-size:16px;line-height:1.5}
+h1,h2,h3{letter-spacing:0;font-weight:600}
+.eyebrow{text-transform:none;letter-spacing:0;font-size:15px;font-weight:600;font-family:var(--display);color:var(--fan)}
+.gate,.askwrap{border-radius:24px;border-color:var(--line)}
+.gate h1{font-size:36px;color:var(--ink)}
+.askwrap>summary .t{font-weight:600;font-size:21px}
+.askwrap>summary::after,.fold>summary::after{color:var(--fan)}
+.chip{border:1px solid var(--fan-soft);background:var(--fan-soft);color:var(--fan);font-weight:700}
+.summary{border-left-color:var(--steel)}
+
+/* the week header: one bold violet block */
+header{background:var(--hero);color:var(--hero-ink);border-radius:28px;padding:18px 18px 20px;gap:12px}
+header .eyebrow{color:var(--hero-ink);opacity:.9}
+.weekbar h1{font-size:44px;font-weight:700}
+.navbtn{border:0;background:var(--hero-soft);color:var(--hero-ink);font-size:20px}
+.meta{color:var(--hero-ink);opacity:.92}
+.phase{text-transform:none;letter-spacing:0;font-size:16px;color:var(--hero-ink);background:var(--hero-soft);padding:2px 10px;border-radius:999px}
+.badge{text-transform:none;letter-spacing:0;font-size:12px;border-radius:999px;padding:2px 9px;background:var(--hero-soft);color:var(--hero-ink)}
+.badge.tuned{background:var(--ok);color:var(--on-ok)}
+header .linkbtn{color:var(--hero-ink);text-decoration:underline;text-underline-offset:3px}
+.prog{gap:5px}
+.prog span{height:8px;border-radius:999px;background:var(--hero-soft)}
+.prog span.on{background:var(--ok)}
+
+/* days and cards */
+.day{border-top-color:var(--line)}
+.day:last-child{border-bottom-color:var(--line)}
+.dlabel b{font-family:var(--display);font-weight:600}
+.dlabel small,.dur{font-family:var(--body);font-variant-numeric:tabular-nums}
+.day.today .dlabel b{color:var(--fan)}
+.day.today .dlabel small::after{color:var(--fan)}
+.day.past{opacity:.8}
+.daycheck{background:var(--ok);color:var(--on-ok)}
+.day.alldone .dlabel b{color:var(--ink)}
+.card{border-radius:20px;border-color:var(--line)}
+.card.done{opacity:1;background:var(--ok-soft);border-color:transparent}
+.card.done .ctitle{text-decoration:none}
+.card.done .ctitle::after{content:" · done!";color:var(--muted);font-weight:600;font-size:14px}
+.tag{text-transform:none;letter-spacing:0;font-size:12px;font-weight:800;border-radius:999px;padding:3px 10px}
+.tag.other{background:var(--fan-soft);color:var(--fan)}
+.tag.rest{background:var(--ok-soft);color:var(--on-ok)}
+.ctitle{font-weight:700}
+.pri{text-transform:none;letter-spacing:0}
+.chev{color:var(--fan)}
+.block h3,.ambition h3{text-transform:none;letter-spacing:0;font-family:var(--display);font-size:16px;font-weight:600;color:var(--ink)}
+.exdose,.num{font-family:var(--body);font-weight:800;color:var(--fan)}
+.cue{border-left:3px solid var(--fan-soft)}
+.btn{border-color:var(--line);font-weight:700}
+.btn.primary{background:var(--fan);border-color:var(--fan);color:var(--on-fan)}
+.card.done .btn.primary{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.wt input{font-family:var(--body);font-weight:700;border-radius:12px}
+.wt button{border-radius:12px;border-color:var(--line);color:var(--fan)}
+select,input,textarea{border-radius:12px}
+.restlinks a,.howlinks a{border-radius:999px}
+.restlinks a{color:var(--fan)}
+.linkbtn{color:var(--fan)}
+
+/* plan sections further down */
+.fold>summary h2,section.panel h2{font-size:26px}
+.rules li::before{content:"♡";color:var(--steel)}
+.phases button{border-radius:10px;font-family:var(--body);font-weight:700}
+.phases button.b{background:var(--moss-soft)} .phases button.u{background:var(--fan-soft)} .phases button.p{background:var(--steel-soft)}
+.phases button.cur{outline:2px solid var(--fan)}
+.hint a,.danger{color:var(--fan)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--fan);outline-offset:2px}
+</style>
 </head>
 <body>
 <div class="wrap">
   <section class="gate" id="gateSignin" hidden>
     <div class="eyebrow">Ana Banana exercise plan</div>
-    <h1>Your plan, week by week</h1>
-    <p>Describe what you want to work towards and Claude builds a weekly plan around it. Change it whenever your week changes.</p>
+    <h1>Hi! Ready to move?</h1>
+    <p>Your own exercise plan, one happy week at a time. It bends around your week, so there's no such thing as falling behind.</p>
     <form id="emailForm" style="display:flex;flex-direction:column;gap:10px">
       <label class="field" for="signinEmail">Email
         <input id="signinEmail" type="email" autocomplete="username" inputmode="email" required>
@@ -224,7 +315,7 @@ section.panel h2{font-size:24px;font-weight:700}
       </label>
       <button class="btn primary" id="emailBtn" type="submit" style="align-self:flex-start">Sign in</button>
     </form>
-    <p class="hint" id="signinMsg">Your plan is private to you.</p>
+    <p class="hint" id="signinMsg">Your plan is just for you.</p>
     <button class="linkbtn" id="resetPassBtn" type="button" style="align-self:flex-start;font-size:13px">Forgot your password?</button>
   </section>
 
@@ -299,7 +390,7 @@ section.panel h2{font-size:24px;font-weight:700}
   <section class="panel">
     <h2 id="weeksTitle">The weeks</h2>
     <div class="phases" id="phases"></div>
-    <div class="legend"><span><i style="background:var(--moss-soft)"></i>Base</span><span><i style="background:var(--steel-soft)"></i>Build</span><span><i style="background:var(--fan-soft)"></i>Peak</span><span><i style="border:1px dashed var(--muted)"></i>Lighter</span></div>
+    <div class="legend"><span><i style="background:var(--moss-soft)"></i>Base</span><span><i style="background:var(--fan-soft)"></i>Build</span><span><i style="background:var(--steel-soft)"></i>Peak</span><span><i style="border:1px dashed var(--muted)"></i>Lighter</span></div>
   </section>
 
   <details class="askwrap" id="planWrap"><summary><span class="t">Adjust the whole plan</span><span class="h">Change the full program</span></summary>
@@ -354,6 +445,7 @@ section.panel h2{font-size:24px;font-weight:700}
   </div>
 </div>
 
+<script>if(/[?&]demo\b/.test(location.search))document.write('<script src="demo.js"><\/script>')</script>
 <script src="firebase-config.js"></script>
 <script src="firebase.js"></script>
 <script>
@@ -431,7 +523,7 @@ function onDocs(docs){
     if(id==="bench"){bench=v;changed=true}
     else if(id==="weights"){weights=v;changed=true}
     else if(id==="settings"){settings={unit:"lb",...v};changed=true}
-    else if(id==="program"){prog=v.active?v:null;applyProg();changed=true}
+    else if(id==="program"){const first=!(prog&&prog.active);prog=v.active?v:null;applyProg();if(first)wk=curWeek;changed=true}
     else if(/^w\d+$/.test(id)){weeks[+id.slice(1)]={plan:v.plan||null,notes:v.notes||[],done:v.done||{}};changed=true}
   }
   if(changed){local();if(!document.activeElement?.dataset?.wk&&!document.activeElement?.dataset?.bk)render()}
@@ -518,7 +610,7 @@ function render(){
   if(!signed||!has)return;
   const w=W[wk], st=wkState(wk), ss=sessionsFor(wk), start=addDays(START,wk*7), dn=st.done||{};
   const end=addDays(START,W.length*7-1);
-  $("eyebrow").textContent=`Ana Banana exercise plan · ${fmt(START)} – ${fmt(end)}`;
+  $("eyebrow").textContent="Ana Banana 🍌";
   $("wtitle").textContent=`Week ${wk+1}`;
   $("wphase").textContent=w.ph||"";
   $("wdates").textContent=`${fmt(start)} – ${fmt(addDays(start,6))}`;
@@ -575,7 +667,7 @@ function restCard(i,dn){
   const rid="rest"+i, ro=open.has(wk+":"+rid), rd=!!dn[rid];
   return `<div class="card ${ro?"open":""} ${rd?"done":""}">
     <button class="chead" data-t="${rid}" aria-expanded="${ro}"><span class="tag rest">Rest</span>
-      <span class="cbody"><span class="ctitle">Rest day</span><span class="csum">Walk, move gently, stretch</span></span><span class="chev">›</span></button>
+      <span class="cbody"><span class="ctitle">Rest day</span><span class="csum">Walk, stretch, be nice to yourself</span></span><span class="chev">›</span></button>
     ${ro?`<div class="detail">
       <p class="cue">Keep moving lightly. A walk counts. Add a stretch or a yin session if your body wants it.</p>
       <div class="restlinks"><a href="${yt("Mady Morrison 15 minute full body stretch english")}" target="_blank" rel="noopener">15-min stretch ↗</a><a href="${yt("Travis Eliot yin yoga 45 minute full body")}" target="_blank" rel="noopener">45-min yin yoga ↗</a></div>

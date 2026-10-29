@@ -2,6 +2,7 @@
 // Each person's data lives under fitness/{uid}/docs/{key}, readable and writable only by them (see firestore.rules).
 // Uses its own Firebase project; settings live in firebase-config.js.
 (function () {
+  if (window.FP_DEMO) return; // style preview (demo.js) is running instead
   const CONFIG = window.FIREBASE_CONFIG || {};
   if (!CONFIG.apiKey) {
     const msg = "This site isn't connected to its database yet. Check back soon.";
