@@ -677,7 +677,17 @@ $("signOutBtn").onclick=()=>fp.signOut();
 $("emailForm").onsubmit=async e=>{e.preventDefault();const em=$("signinEmail").value.trim(),pw=$("signinPass").value;if(!em||!pw)return;
   $("emailBtn").disabled=true;$("signinMsg").textContent="Signing in…";
   try{await fp.signIn(em,pw);$("signinPass").value=""}
-  catch(err){$("signinMsg").textContent=(err&&err.userMsg)||"That email and password didn't match. Try again, or reset your password."}
+  catch(err){const c=err&&err.code||"";const M={
+    "auth/invalid-credential":"That email and password didn't match. Check both, or reset your password.",
+    "auth/wrong-password":"Wrong password. Try again, or reset your password.",
+    "auth/user-not-found":"There's no account for that email yet. Add it in Firebase → Authentication → Users.",
+    "auth/invalid-email":"That doesn't look like an email address.",
+    "auth/operation-not-allowed":"Password sign-in is switched off. Turn on Email/Password in Firebase → Authentication → Sign-in method.",
+    "auth/configuration-not-found":"Sign-in isn't set up in Firebase yet. Turn on Email/Password in Authentication → Sign-in method.",
+    "auth/too-many-requests":"Too many tries. Wait a few minutes, or reset your password.",
+    "auth/user-disabled":"This account is switched off in Firebase.",
+    "auth/network-request-failed":"No connection. Check your internet and try again."};
+    $("signinMsg").textContent=(err&&err.userMsg)||M[c]||`Sign-in failed (${c||(err&&err.message)||"unknown error"}).`;console.error(err)}
   finally{$("emailBtn").disabled=false}};
 $("resetPassBtn").onclick=async()=>{const em=$("signinEmail").value.trim();
   if(!em){$("signinMsg").textContent="Type your email above first, then tap “Forgot your password?”.";$("signinEmail").focus();return}
