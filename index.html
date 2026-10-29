@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Ana Banana">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%237C4DDB'/%3E%3Cpath d='M18 33l9 9 19-20' fill='none' stroke='white' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,500..700,0..100&family=Nunito:wght@400;600;700;800&display=swap">
 <style>
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}
@@ -217,7 +217,7 @@ section.panel h2{font-size:24px;font-weight:700}
   --moss:#1F8F72; --moss-soft:#DCF4EB; --steel:#B4467F; --steel-soft:#FCE6F1;
   --ok:#FFCC33; --ok-soft:#FFF5CC; --on-ok:#3B2A00;
   --hero:#6E3FD1; --hero-ink:#FFFFFF; --hero-soft:rgba(255,255,255,.22);
-  --display:"Fredoka","Nunito",ui-rounded,system-ui,sans-serif;
+  --display:"Fraunces",Georgia,"Times New Roman",serif;
   --body:"Nunito",ui-rounded,system-ui,-apple-system,sans-serif;
   --mono:"Nunito",ui-rounded,system-ui,sans-serif;
 }
@@ -234,7 +234,8 @@ section.panel h2{font-size:24px;font-weight:700}
   --ok:#FFD54D; --ok-soft:#3A3115; --on-ok:#2A1F00;
   --hero:#4C2C93; --hero-ink:#F7F1FF; --hero-soft:rgba(255,255,255,.14); color-scheme:dark}
 body{font-size:16px;line-height:1.5}
-h1,h2,h3{letter-spacing:0;font-weight:600}
+h1,h2,h3,.eyebrow,.askwrap>summary .t,.dlabel b,.phase{font-variation-settings:"SOFT" 100,"opsz" 72}
+h1,h2,h3{letter-spacing:-.01em;font-weight:600}
 .eyebrow{text-transform:none;letter-spacing:0;font-size:15px;font-weight:600;font-family:var(--display);color:var(--fan)}
 .gate,.askwrap{border-radius:24px;border-color:var(--line)}
 .gate h1{font-size:36px;color:var(--ink)}
@@ -246,7 +247,7 @@ h1,h2,h3{letter-spacing:0;font-weight:600}
 /* the week header: one bold violet block */
 header{background:var(--hero);color:var(--hero-ink);border-radius:28px;padding:18px 18px 20px;gap:12px}
 header .eyebrow{color:var(--hero-ink);opacity:.9}
-.weekbar h1{font-size:44px;font-weight:700}
+.weekbar h1{font-size:46px;font-weight:600;letter-spacing:-.02em}
 .navbtn{border:0;background:var(--hero-soft);color:var(--hero-ink);font-size:20px}
 .meta{color:var(--hero-ink);opacity:.92}
 .phase{text-transform:none;letter-spacing:0;font-size:16px;color:var(--hero-ink);background:var(--hero-soft);padding:2px 10px;border-radius:999px}
