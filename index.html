@@ -216,13 +216,16 @@ section.panel h2{font-size:24px;font-weight:700}
     <h1>Your plan, week by week</h1>
     <p>Describe what you want to work towards and Claude builds a weekly plan around it. Change it whenever your week changes.</p>
     <form id="emailForm" style="display:flex;flex-direction:column;gap:10px">
-      <label class="field" for="signinEmail">Your email
-        <input id="signinEmail" type="email" autocomplete="email" inputmode="email" required placeholder="you@hotmail.com">
+      <label class="field" for="signinEmail">Email
+        <input id="signinEmail" type="email" autocomplete="username" inputmode="email" required>
       </label>
-      <button class="btn primary" id="emailBtn" type="submit" style="align-self:flex-start">Email me a sign-in link</button>
+      <label class="field" for="signinPass">Password
+        <input id="signinPass" type="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn primary" id="emailBtn" type="submit" style="align-self:flex-start">Sign in</button>
     </form>
-    <p class="hint" id="signinMsg">No password. We email you a link, you tap it, you're in. Your plan is private to you.</p>
-    <button class="linkbtn" id="signInBtn" type="button" style="align-self:flex-start;font-size:13px">Or sign in with Google</button>
+    <p class="hint" id="signinMsg">Your plan is private to you.</p>
+    <button class="linkbtn" id="resetPassBtn" type="button" style="align-self:flex-start;font-size:13px">Forgot your password?</button>
   </section>
 
   <section class="gate" id="gateSetup" hidden>
@@ -670,13 +673,16 @@ $("gotoToday").onclick=()=>{wk=curWeek;render()};
 $("resetBtn").onclick=()=>{const st=wkState(wk);st.plan=null;saveWeek(wk);render()};
 $("apiKey").addEventListener("change",e=>{setKey(e.target.value.trim());render()});
 $("unit").addEventListener("change",e=>{settings.unit=e.target.value;persist("settings",settings);render()});
-$("signInBtn").onclick=async()=>{$("signinMsg").textContent="Opening Google sign-in…";try{await fp.signIn()}catch(e){$("signinMsg").textContent=(e&&e.userMsg)||"Sign-in didn't complete. Try again."}};
 $("signOutBtn").onclick=()=>fp.signOut();
-$("emailForm").onsubmit=async e=>{e.preventDefault();const em=$("signinEmail").value.trim();if(!em)return;
-  $("emailBtn").disabled=true;$("signinMsg").textContent="Sending…";
-  try{await fp.sendLink(em);$("signinMsg").textContent=`Check ${em} for a sign-in link (look in Junk too). Open it on this device.`}
-  catch(err){$("signinMsg").textContent=(err&&err.userMsg)||"Couldn't send the link. Check the address and try again."}
+$("emailForm").onsubmit=async e=>{e.preventDefault();const em=$("signinEmail").value.trim(),pw=$("signinPass").value;if(!em||!pw)return;
+  $("emailBtn").disabled=true;$("signinMsg").textContent="Signing in…";
+  try{await fp.signIn(em,pw);$("signinPass").value=""}
+  catch(err){$("signinMsg").textContent=(err&&err.userMsg)||"That email and password didn't match. Try again, or reset your password."}
   finally{$("emailBtn").disabled=false}};
+$("resetPassBtn").onclick=async()=>{const em=$("signinEmail").value.trim();
+  if(!em){$("signinMsg").textContent="Type your email above first, then tap “Forgot your password?”.";$("signinEmail").focus();return}
+  try{await fp.resetPassword(em);$("signinMsg").textContent=`If ${em} has an account, a reset link is on its way. Check Junk too.`}
+  catch(err){$("signinMsg").textContent=(err&&err.userMsg)||"Couldn't send the reset email. Try again."}};
 let startOverArmed=false;
 $("startOverBtn").onclick=()=>{
   if(!startOverArmed){startOverArmed=true;$("startOverBtn").textContent="Tap again to delete this plan";$("startOverMsg").textContent="Your ticks and notes for this plan go too. Weights are kept.";setTimeout(()=>{startOverArmed=false;$("startOverBtn").textContent="Start a new plan";$("startOverMsg").textContent=""},6000);return}
