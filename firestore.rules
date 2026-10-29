@@ -1,11 +1,18 @@
 rules_version = '2';
 // Ana Banana exercise plan (tobiasfk.github.io/ana-banana-exercise).
-// Each person's plan lives under fitness/{uid}/docs/*, readable and writable only by them. Everything else is closed.
+// Only the two allowed accounts can sign in and use the site. Each person's plan lives under
+// fitness/{uid}/docs/*, readable and writable only by them. Everything else is closed.
 service cloud.firestore {
   match /databases/{database}/documents {
+    function allowed() {
+      return request.auth != null
+        && request.auth.token.email.lower() in [
+          'tobias.fabricius@gmail.com',
+          'ana_carolina_amaral@hotmail.com'
+        ];
+    }
     match /fitness/{uid}/{rest=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid
-        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      allow read, write: if allowed() && request.auth.uid == uid;
     }
   }
 }
