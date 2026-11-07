@@ -331,6 +331,10 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .ytlink small{display:block;font-size:12px;font-weight:700;color:var(--fan)}
 .ytlink .play{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--fan);color:var(--on-fan);font-size:12px;padding-left:2px}
 .ytlink:hover span:last-child{text-decoration:underline;text-underline-offset:3px}
+.ytquick{display:flex;align-items:center;gap:10px;margin:0 12px 12px;padding:8px 12px;border-radius:14px;background:var(--fan-soft);color:var(--fan);font-weight:800;text-decoration:none;width:max-content;max-width:calc(100% - 24px)}
+.ytquick .play{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--fan);color:var(--on-fan);font-size:11px;padding-left:2px}
+.ytquick:hover{text-decoration:underline;text-underline-offset:3px}
+.card.done .ytquick{background:var(--surface)}
 </style>
 </head>
 <body>
@@ -665,6 +669,7 @@ function card(s,dn){
   return `<div class="card ${isOpen?"open":""} ${isDone?"done":""}">
     <button class="chead" data-t="${esc(s.id)}" aria-expanded="${isOpen}"><span class="tag ${tag}">${esc(s.kind||tag)}</span>
       <span class="cbody"><span class="ctitle">${esc(s.title)}</span><span class="csum">${esc(s.sum)}</span></span><span class="chev">›</span></button>
+    ${(s.items||[]).some(r=>/^yoga with adriene/i.test(String(r[0])))?`<a class="ytquick" href="${yt("Yoga With Adriene")}" target="_blank" rel="noopener"><span class="play" aria-hidden="true">▶</span>Open Yoga With Adriene</a>`:""}
     ${isOpen?`<div class="detail">
       ${s.warmup&&s.warmup.length?`<div class="block"><h3>Warm-up</h3>${list(s.warmup)}</div>`:""}
       <div class="block"><h3>Workout</h3>${s.cue?`<p class="cue">${esc(s.cue)}</p>`:""}${list(s.items,s.id)}</div>
