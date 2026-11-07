@@ -327,6 +327,10 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .daypanel .hint{margin-bottom:-6px;font-weight:700}
 .daypanel .askc{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:12px}
 @media (max-width:420px){.swapedit .two{grid-template-columns:1fr}}
+.ytlink{display:inline-flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700}
+.ytlink small{display:block;font-size:12px;font-weight:700;color:var(--fan)}
+.ytlink .play{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--fan);color:var(--on-fan);font-size:12px;padding-left:2px}
+.ytlink:hover span:last-child{text-decoration:underline;text-underline-offset:3px}
 </style>
 </head>
 <body>
@@ -625,7 +629,7 @@ function howTo(sessions){
   sessions.forEach(s=>{
     [...(s.warmup||[]),...(s.items||[])].forEach(r=>{
       const raw=String(r[0]);
-      if(SKIP.test(raw)||/jog|pedal/i.test(raw))return;
+      if(SKIP.test(raw)||/jog|pedal|adriene|walk|stretch/i.test(raw))return;
       const n=raw.split(",")[0].replace(/\s*\(.*?\)/g,"").replace(/^cable machine:\s*/i,"Cable ").trim();
       if(n&&!names.has(n))names.set(n,raw.split(",")[0].replace(/\(.*?\)/g,"").replace(/^cable machine:\s*/i,"cable ")+" proper form");
     });
@@ -637,7 +641,9 @@ function list(rows,sid){
   const u=settings.unit==="kg"?"kg":"lb", step=u==="kg"?2.5:5;
   return `<div class="ex ${sid?"":"warm"}">${(rows||[]).map((r,n)=>{
   if(sid&&swapOpen===wk+":"+sid+":"+n)return swapEditor(r,sid,n);
-  const base=`<span class="exname">${esc(r[0])}</span><span class="exdose">${esc(r[1])}${sid?`<button type="button" class="swapbtn" data-swap="${esc(sid)}:${n}" aria-label="Swap or edit ${esc(r[0])}">⇄</button>`:""}</span>`;
+  const ywa=String(r[0]).match(/^yoga with adriene:\s*(.+)$/i);
+  const nm=ywa?`<a class="ytlink" href="${yt("Yoga With Adriene "+ywa[1])}" target="_blank" rel="noopener"><span class="play" aria-hidden="true">▶</span><span><small>Yoga With Adriene</small>${esc(ywa[1])}</span></a>`:esc(r[0]);
+  const base=`<span class="exname">${nm}</span><span class="exdose">${esc(r[1])}${sid?`<button type="button" class="swapbtn" data-swap="${esc(sid)}:${n}" aria-label="Swap or edit ${esc(r[0])}">⇄</button>`:""}</span>`;
   const weighted=sid&&r.length>2&&r[2]!==""&&r[2]!=null&&isFinite(Number(r[2]));
   if(!weighted)return `<div class="exrow">${base}</div>`;
   const k=slug(r[0]), rec=weights[k], val=rec?rec.v:Number(r[2]), id=`wt-${esc(sid)}-${k}`;
@@ -732,12 +738,13 @@ const extras=()=>Array.isArray(prog&&prog.extras)&&prog.extras.length?prog.extra
 function altsFor(name){
   const m=prog&&prog.swaps||{}, k=slug(name);
   for(const [n,v] of Object.entries(m))if(slug(n)===k&&Array.isArray(v))return v;
+  if(/^yoga with adriene/i.test(name))for(const [n,v] of Object.entries(m))if(/^yoga with adriene/i.test(n)&&Array.isArray(v))return v.filter(a=>slug(a[0])!==k);
   return [];
 }
 function swapEditor(r,sid,n){
   const isNew=n==="new", alts=isNew?[]:altsFor(r[0]), id=`${sid}-${n}`;
   return `<div class="swapedit" data-swapform="${esc(sid)}:${n}">
-    ${alts.length?`<div class="picks">${alts.map((a,j)=>`<button type="button" class="pick" data-alt="${esc(sid)}:${n}:${j}">${esc(a[0])} <small>${esc(a[1]||"")}</small></button>`).join("")}</div>`:""}
+    ${alts.length?`<div class="picks">${alts.map((a,j)=>`<button type="button" class="pick" data-alt="${esc(sid)}:${n}:${j}">${esc(String(a[0]).replace(/^yoga with adriene:\s*/i,"▶ "))} <small>${esc(a[1]||"")}</small></button>`).join("")}</div>`:""}
     <div class="two">
       <label class="field" for="sw-name-${esc(id)}">${isNew?"Exercise":alts.length?"Or type your own":"Exercise"}<input id="sw-name-${esc(id)}" value="${esc(r[0])}" placeholder="E.g. Stair climber"></label>
       <label class="field" for="sw-dose-${esc(id)}">Amount<input id="sw-dose-${esc(id)}" value="${esc(r[1])}" placeholder="10 min"></label>
