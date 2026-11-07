@@ -6,14 +6,14 @@
   const yoga = mins => ["Yoga With Adriene", mins];
 
   window.PLAN = {
-    version: "v2-2026-11-07",
+    version: "v3-2026-11-07",
     updated: "2026-11-07",
     start: "2026-11-09",
     name: "Energy Back by New Year",
-    ambition: "Get your energy back and feel stronger by New Year's, without adding stress to long weeks. Two light gym days built on the bike, treadmill and light dumbbells, with Yoga With Adriene and stretching in between for posture and flexibility. A third gym day is a bonus, never a must.",
+    ambition: "Get your energy back and feel stronger by New Year's, without adding stress to long weeks. Every day starts with Yoga With Adriene in the morning. On top of that: two light gym days built on the bike, treadmill and light dumbbells, a walk-and-stretch day for posture, and an optional third gym day.",
     success: "In the last week, three rounds feel easy, your plank is longer than in week 1, and you feel more awake.",
-    rules: "- Two gym days a week; a third is optional\n- Really light: always finish feeling you could do more\n- Alternate gym days with stretching or Yoga With Adriene (keep yoga general)\n- Short sessions that fit around long, tiring work weeks\n- Focus on treadmill, bike, assault bike and free weights\n- Goals: strength, flexibility, posture, and burning a few more calories",
-    profile: "Very long, exhausting work weeks; feeling tired and sedentary. Goals: more strength and flexibility, better posture, burn calories to lose about 2 lb. No injuries. Gym with treadmill, bike, assault bike and free weights. Max 2, at most 3 gym days a week, really light work, alternating with stretching and Yoga With Adriene (keep yoga general: no specific videos or instructions).",
+    rules: "- Two gym days a week; a third is optional\n- Really light: always finish feeling you could do more\n- Yoga With Adriene every morning is the foundation (keep yoga general)\n- Gym days sit on top of the morning yoga, with lighter days in between\n- Short sessions that fit around long, tiring work weeks\n- Focus on treadmill, bike, assault bike and free weights\n- Goals: strength, flexibility, posture, and burning a few more calories",
+    profile: "Very long, exhausting work weeks; feeling tired and sedentary. Goals: more strength and flexibility, better posture, burn calories to lose about 2 lb. No injuries. Gym with treadmill, bike, assault bike and free weights. Max 2, at most 3 gym days a week, really light work. Yoga With Adriene every morning is the foundation (keep yoga general: no specific videos or instructions); gym and stretch sessions sit on top.",
     benchmarks: [
       "Forward fold · week 1 (knees, shins or toes?)",
       "Plank on knees · week 1 (seconds)",
@@ -37,13 +37,17 @@
         vars: { sets: 3, reps: 12, hold: "30 s", bike: "15 min", incline: "22 min", iv: 6, walk: "30 min", opt: "30 min" } },
       { ph: "Lighter", focus: "Christmas week. Keep moving a little and let the rest go.",
         vars: { sets: 2, reps: 10, hold: "25 s", bike: "10 min", incline: "15 min", iv: 4, walk: "20 min", opt: "25 min" },
-        notes: { fri: "Christmas Day. A short yoga, a walk with family, or nothing at all. All good." } },
+        notes: { yoga4: "Christmas Day. Yoga if you feel like it, a walk with family, or nothing at all. All good." } },
       { ph: "Lighter", focus: "Last week of the year! Redo your check-ins and see how far you've come.",
         vars: { sets: 2, reps: 10, hold: "30 s", bike: "12 min", incline: "18 min", iv: 4, walk: "20 min", opt: "25 min" },
         notes: { gymB: "New Year's Day. Move it to Friday, or make it a fresh-air walk." } }
     ],
 
     tpl: [
+      // The foundation: Yoga With Adriene every morning.
+      ...[0, 1, 2, 3, 4, 5, 6].map(day => ({ id: "yoga" + day, tag: "other", kind: "Morning", title: "Morning yoga", day,
+        sum: "Yoga With Adriene", warmup: [], cue: "", items: [yoga("20–30 min")], after: "", mins: 25 })),
+
       { id: "gymA", tag: "str", kind: "Gym", title: "Strength & posture", day: 0,
         sum: "{sets} rounds · legs, back, shoulders · {bike} easy bike",
         warmup: [["Bike or assault bike, easy", "5 min"], ["Arm circles", "10 each way"]],
@@ -51,11 +55,6 @@
         items: [["Goblet squat", "{reps}", 15], ["One-arm dumbbell row", "{reps} / side", 12], ["Dumbbell Romanian deadlift", "{reps}", 12],
                 ["Dumbbell reverse fly", "{reps}", 5], ["Dead bug", "8 / side"]],
         after: "Finish with {bike} easy on the bike, at a pace where you could chat.", mins: 40 },
-
-      { id: "tue", tag: "other", kind: "Yoga", title: "Yoga", day: 1,
-        sum: "Yoga With Adriene",
-        warmup: [], cue: "",
-        items: [yoga("20–30 min")], after: "", mins: 25 },
 
       { id: "wed", tag: "run", kind: "Stretch", title: "Walk & stretch", day: 2,
         sum: "{walk} brisk walk · posture stretches",
@@ -72,11 +71,6 @@
         items: [["Incline treadmill walk", "{incline}"], ["Split squat, holding a rail", "8 / side"], ["Seated dumbbell shoulder press", "{reps}", 8],
                 ["Farmer carry", "30 s", 15], ["Plank on knees", "{hold}"]],
         after: "Optional: {iv} rounds on the assault bike, 20 s brisk and 70 s easy. Skip it on tired days.", mins: 45 },
-
-      { id: "fri", tag: "other", kind: "Yoga", title: "Yoga", day: 4,
-        sum: "Yoga With Adriene",
-        warmup: [], cue: "",
-        items: [yoga("20–30 min")], after: "", mins: 25 },
 
       { id: "bonus", tag: "bike", kind: "Optional", title: "Easy cardio (bonus)", day: 5,
         sum: "{opt} easy bike or treadmill · or a walk outside",
@@ -110,7 +104,7 @@
     extras: [
       { id: "walk", tag: "run", kind: "Walk", title: "Feel-good walk", sum: "20–30 min brisk walk, outside if you can",
         warmup: [], cue: "A pace where you can still chat. Swing your arms, shoulders down.", items: [["Brisk walk", "25 min"]], after: "", mins: 25 },
-      { id: "yoga", tag: "other", kind: "Yoga", title: "Yoga", sum: "Yoga With Adriene",
+      { id: "yoga", tag: "other", kind: "Yoga", title: "Extra yoga", sum: "Yoga With Adriene",
         warmup: [], cue: "", items: [yoga("10–30 min")], after: "", mins: 20 },
       { id: "bike", tag: "bike", kind: "Cardio", title: "Easy bike", sum: "20 min easy spin",
         warmup: [], cue: "Chatty pace, music on.", items: [["Bike, easy", "20 min"]], after: "", mins: 20 }

@@ -770,7 +770,7 @@ function dayPanel(i,isToday){
   if(!o)return `<button type="button" class="dayopen" data-dayopen="${i}">${isToday?"Change today":"Change this day"}</button>${note}`;
   const dn=wkState(wk).done||{}, ss=sessionsFor(wk);
   const here=ss.filter(s=>s.day===i), undone=here.filter(s=>!dn[s.id]);
-  const movable=ss.filter(s=>s.day!==i&&!dn[s.id]);
+  const movable=ss.filter(s=>s.day!==i&&!dn[s.id]&&!(s.tag==="other"&&here.some(h=>h.title===s.title)));
   const busy=dayRunning===k, key=!!getKey();
   return `<div class="daypanel">
     <h4>${isToday?"Change today":"Change "+DAYS[i]}</h4>
@@ -808,10 +808,10 @@ document.addEventListener("click",e=>{
   else if(b=g("[data-extra]")){const [i,j]=b.dataset.extra.split(":").map(Number);const st=editable(wk),x=clone(extras()[j]);
     x.id=String(x.id||"x")+"-"+Date.now().toString(36);x.day=i;st.plan.sessions.push(x);dayDone(i,`Added ${x.title}. Have fun!`)}
   else if(b=g("[data-restday]")){const i=+b.dataset.restday;const st=editable(wk),dn=st.done||{};
-    const startD=addDays(START,wk*7), used=d=>st.plan.sessions.some(s=>s.day===d);
+    const startD=addDays(START,wk*7), light=s=>s.tag==="other", used=d=>st.plan.sessions.some(s=>s.day===d&&!light(s));
     const moved=[];st.plan.sessions.filter(s=>s.day===i&&!dn[s.id]).forEach(s=>{
-      let to=null;for(let d=i+1;d<7;d++){if(addDays(startD,d)>=now&&!used(d)){to=d;break}}
-      s.day=to===null?"skip":to;moved.push(to===null?`${s.title} is dropped this week`:`${s.title} moved to ${DAYS[to]}`)});
+      let to=null;if(!light(s))for(let d=i+1;d<7;d++){if(addDays(startD,d)>=now&&!used(d)){to=d;break}}
+      s.day=to===null?"skip":to;moved.push(to===null?(light(s)?`${s.title} skipped`:`${s.title} is dropped this week`):`${s.title} moved to ${DAYS[to]}`)});
     dayDone(i,`Rest day! ${moved.join(", ")}.`)}
   else if(b=g("[data-daychip]")){const i=b.dataset.daychip,k=wk+":"+i,t=$("dk-"+i);t.value=(t.value?t.value.trim()+" ":"")+b.textContent;dayDraft[k]=t.value;t.focus()}
   else return;
