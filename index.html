@@ -17,7 +17,7 @@ img{max-width:100%}
 [hidden]{display:none!important}
 </style>
 <style>
-/* Layout: single phone column — sign-in or setup card, then week header, day lanes with session cards, plan tools, settings */
+/* Layout: single phone column — week header, day lanes with session cards, then plan notes and settings */
 :root{
   --bg:#ECEEE9; --surface:#F8F9F6; --ink:#18211D; --muted:#5C6862; --line:#D3D8D1;
   --moss:#2F5D45; --moss-soft:#DCE7DF; --fan:#D14A12; --fan-soft:#F7E1D5; --steel:#3E5468; --steel-soft:#DDE4EB; --on-fan:#FFFFFF; --ok:#23924F; --ok-soft:#D7EEDF;
@@ -312,64 +312,14 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 </head>
 <body>
 <div class="wrap">
-  <section class="gate" id="gateSignin" hidden>
-    <div class="eyebrow">Ana Banana exercise plan</div>
-    <h1>Hi! Ready to move?</h1>
-    <p>Your own exercise plan, one happy week at a time. It bends around your week, so there's no such thing as falling behind.</p>
-    <form id="emailForm" style="display:flex;flex-direction:column;gap:10px">
-      <label class="field" for="signinEmail">Email
-        <input id="signinEmail" type="email" autocomplete="username" inputmode="email" required>
-      </label>
-      <label class="field" for="signinPass">Password
-        <input id="signinPass" type="password" autocomplete="current-password" required>
-      </label>
-      <button class="btn primary" id="emailBtn" type="submit" style="align-self:flex-start">Sign in</button>
-    </form>
-    <p class="hint" id="signinMsg">Your plan is just for you.</p>
-    <button class="linkbtn" id="resetPassBtn" type="button" style="align-self:flex-start;font-size:13px">Forgot your password?</button>
+
+  <section class="gate" id="gateEmpty" hidden>
+    <div class="eyebrow">Ana Banana 🍌</div>
+    <h1>Your plan is on its way</h1>
+    <p>Tobias is putting it together. Check back soon!</p>
   </section>
 
-  <section class="gate" id="gateSetup" hidden>
-    <div class="eyebrow">Set up your plan</div>
-    <h1>What do you want to work on?</h1>
-    <p>Tell Claude about yourself in your own words. The more it knows, the better the plan.</p>
-    <ul class="hint" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:2px">
-      <li>Your goal, and by when</li>
-      <li>How many days a week you can train, and for how long</li>
-      <li>Where you train and what equipment you have</li>
-      <li>What you enjoy, and what you'd rather skip</li>
-      <li>Any injuries or things to be careful with</li>
-    </ul>
-    <textarea id="setupAsk" aria-label="Describe your goals" placeholder="E.g. I want to feel stronger and have more energy by spring. I can train 3–4 times a week, 45 minutes max. My gym has dumbbells, cable machines, a treadmill and a rowing machine. I like classes and stretching, not running. Bit of a sore lower back sometimes."></textarea>
-    <label class="field" for="setupKey" id="setupKeyWrap">Claude API key
-      <input id="setupKey" type="password" autocomplete="off" placeholder="sk-ant-…">
-      <span class="hint">Needed to build and adjust the plan. Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. It's stored only on this device.</span>
-    </label>
-    <div class="row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <button class="btn primary" id="setupBtn">Build my plan</button>
-      <button class="btn" id="setupStop" type="button" hidden>Stop</button>
-      <span class="status" id="setupStatus" role="status"></span>
-    </div>
-  </section>
-
-  <div id="app" hidden style="display:contents">
-  <details class="askwrap" id="askWrap"><summary><span class="t">Adjust my week</span><span class="h">Tell Claude what changed</span></summary>
-  <form class="ask" id="askForm">
-    <textarea id="ask" aria-label="How's your week looking?" placeholder="E.g. Busy Tuesday and Wednesday, travelling Thursday. Only 30 minutes on Friday. Legs a bit sore from the weekend."></textarea>
-    <div class="chips">
-      <button type="button" class="chip">Missed today, shift things</button>
-      <button type="button" class="chip">Only 30 min today</button>
-      <button type="button" class="chip">Feeling tired, go easier</button>
-      <button type="button" class="chip">Busy week, keep the essentials</button>
-    </div>
-    <div class="row">
-      <button class="btn primary" id="askBtn" type="submit">Plan my week</button>
-      <button class="btn" id="stopBtn" type="button" hidden>Stop</button>
-      <span class="status" id="status" role="status"></span>
-    </div>
-    <p class="summary" id="summary" hidden></p>
-    <details class="history" id="history" hidden><summary>What you've told me this week</summary><ol id="historyList"></ol></details>
-  </form></details>
+  <div id="app" style="display:contents">
 
   <header>
     <div class="eyebrow" id="eyebrow">Ana Banana exercise plan</div>
@@ -381,7 +331,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     <div class="meta"><span class="phase" id="wphase"></span><span id="wdates"></span><span class="badge" id="badge">Standard plan</span><button class="linkbtn" id="gotoToday" hidden>Back to this week</button></div>
     <p id="wfocus" style="max-width:62ch"></p>
     <div class="prog" id="prog" aria-label="Days done this week"></div>
-    <button class="linkbtn" id="resetBtn" hidden style="align-self:flex-start;font-size:13px">Go back to the standard plan</button>
+    <button class="linkbtn" id="resetBtn" hidden style="align-self:flex-start;font-size:13px">Put this week back as planned</button>
   </header>
 
   <div class="days" id="days"></div>
@@ -389,11 +339,11 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 
   <details class="fold" id="rulesFold"><summary><h2>When the week changes</h2></summary><div class="foldbody">
     <ul class="rules">
-      <li><span><b>Just tell the box at the top.</b> Type what changed and the rest of the week is rebuilt around it. Finished sessions stay put.</span></li>
-      <li><span><b>Shift, don't stack.</b> Missed something? It moves to the next free day, or drops. Never double up to catch up.</span></li>
+      <li><span><b>Move it.</b> Open a session and use "Move to" to put it on another day, or drop it this week. Finished sessions stay put.</span></li>
+      <li><span><b>Shift, don't stack.</b> Missed something? Move it to the next free day, or let it go. Never double up to catch up.</span></li>
       <li><span><b>No hard days back to back.</b> Give your body a day between the toughest sessions.</span></li>
       <li><span><b>Always warm up.</b> Three minutes or so. Short enough that there's no excuse to skip it.</span></li>
-      <li><span><b>Bigger changes?</b> Use "Adjust the whole plan" further down.</span></li>
+      <li><span><b>Bigger changes?</b> Tell Tobias and the plan gets updated.</span></li>
     </ul>
   </div></details>
 
@@ -403,29 +353,14 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     <div class="legend"><span><i style="background:var(--moss-soft)"></i>Base</span><span><i style="background:var(--fan-soft)"></i>Build</span><span><i style="background:var(--steel-soft)"></i>Peak</span><span><i style="border:1px dashed var(--muted)"></i>Lighter</span></div>
   </section>
 
-  <details class="askwrap" id="planWrap"><summary><span class="t">Adjust the whole plan</span><span class="h">Change the full program</span></summary>
-  <form class="ask" id="planForm">
-    <textarea id="planAsk" aria-label="What should change in the overall plan?" placeholder="E.g. More upper body. Swap lunges for step-ups. Add a yoga session on Sundays."></textarea>
-    <div class="chips">
-      <button type="button" class="chip">More strength work</button>
-      <button type="button" class="chip">More cardio</button>
-      <button type="button" class="chip">Make it a bit easier</button>
-      <button type="button" class="chip">Shorter sessions</button>
-    </div>
-    <div class="row">
-      <button class="btn primary" id="planBtn" type="submit">Update the plan</button>
-      <button class="btn" id="planStop" type="button" hidden>Stop</button>
-      <span class="status" id="planStatus" role="status"></span>
-    </div>
+  <details class="fold" id="aboutFold"><summary><h2>About the plan</h2></summary><div class="foldbody">
     <div class="ambition">
       <h3 id="ambTitle">The ambition</h3>
       <p id="ambText"></p>
       <p class="planmeta" id="ambSuccess"></p>
     </div>
-    <p class="summary" id="planSummary" hidden></p>
-    <details class="history" id="planHistory" hidden><summary>Changes you've asked for</summary><ol id="planHistoryList"></ol></details>
     <p class="planmeta" id="planMeta"></p>
-  </form></details>
+  </div></details>
 
   <details class="fold" id="benchFold" hidden><summary><h2>Benchmarks</h2></summary><div class="foldbody">
     <p style="font-size:14px;color:var(--muted)">Check-ins to see how far you've come. Fill them in when the plan asks.</p>
@@ -434,30 +369,17 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 
   <details class="fold" id="settingsFold"><summary><h2>Settings</h2></summary><div class="foldbody">
     <div class="settings">
-      <label class="field wide" for="apiKey" id="apiKeyWrap">Claude API key
-        <input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…">
-        <span class="hint">Builds and adjusts the plans for both of you. Saved to your account; Ana's plan uses it automatically. Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</span>
-      </label>
-      <p class="hint wide" id="sharedKeyNote" hidden>Claude is set up for you. Nothing to add here.</p>
       <label class="field" for="unit">Weights in
         <select id="unit"><option value="lb">lb</option><option value="kg">kg</option></select>
       </label>
-      <div class="field"><span>Signed in as</span><span id="whoami" style="color:var(--ink)"></span></div>
-    </div>
-    <div class="actions">
-      <button class="btn" id="signOutBtn" type="button">Sign out</button>
-      <button class="btn danger" id="startOverBtn" type="button">Start a new plan</button>
-      <span class="status" id="startOverMsg"></span>
     </div>
   </div></details>
 
-  <p class="foot" id="saveNote">Your plan, ticks and weights are saved to your account.</p>
+  <p class="foot" id="saveNote">Your ticks and weights are saved on this phone.</p>
   </div>
 </div>
 
-<script>if(/[?&]demo\b/.test(location.search))document.write('<script src="demo.js"><\/script>')</script>
-<script src="firebase-config.js"></script>
-<script src="firebase.js"></script>
+<script src="plan.js"></script>
 <script>
 const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const MODEL = "claude-sonnet-5-5";
@@ -502,100 +424,19 @@ function standard(i){
     return o});
 }
 
-/* ---------- storage: Firestore (fitness/{uid}/docs/*), mirrored locally ---------- */
-let uid=null;
-const LKEY=()=>"tp.v1."+(uid||"anon");
+/* ---------- storage: this device only ----------
+   The plan itself comes from plan.js (window.PLAN). Ticks, moves, weights and benchmarks
+   are saved in this browser. When plan.js gets a new version, week rearrangements reset
+   (so the new plan shows), but ticks, weights and benchmarks are kept. */
+const LKEY="ab.v1";
+const PLANV=String(window.PLAN&&window.PLAN.version||"");
 function wkState(i){return weeks[i]||(weeks[i]={plan:null,notes:[],done:{}})}
-function local(){try{localStorage.setItem(LKEY(),JSON.stringify({weeks,bench,weights,prog,settings}))}catch(e){}}
-function loadLocal(){try{const s=JSON.parse(localStorage.getItem(LKEY())||"null");if(s){weeks=s.weeks||{};bench=s.bench||{};weights=s.weights||{};prog=s.prog||null;settings={unit:"lb",...(s.settings||{})};applyProg()}}catch(e){}}
-const writing={}, pending={};
-async function persist(key,data){
-  local();
-  if(!uid)return;
-  pending[key]=data;
-  if(writing[key])return;
-  writing[key]=true;
-  try{
-    while(pending[key]){const body=JSON.parse(JSON.stringify(pending[key]));pending[key]=null;
-      try{await fp.save(uid,key,body);saveOk()}catch(e){saveFail()}}
-  }finally{writing[key]=false}
-}
-function saveWeek(i){persist("w"+i,wkState(i))}
-const SAVED_TXT="Your plan, ticks and weights are saved to your account.";
-function saveOk(){const n=$("saveNote");if(n.dataset.err){n.textContent=SAVED_TXT;n.style.color="";delete n.dataset.err}}
-function saveFail(){const n=$("saveNote");n.dataset.err="1";n.textContent="Couldn't sync your last change. It's kept on this device and will sync with your next change.";n.style.color="var(--fan)"}
-
-function onDocs(docs){
-  let changed=false;
-  for(const [id,raw] of Object.entries(docs)){
-    if(writing[id]||pending[id])continue;
-    const v=JSON.parse(JSON.stringify(raw));
-    if(id==="bench"){bench=v;changed=true}
-    else if(id==="weights"){weights=v;changed=true}
-    else if(id==="settings"){settings={unit:"lb",...v};changed=true}
-    else if(id==="program"){const first=!(prog&&prog.active);prog=v.active?v:null;applyProg();if(first)wk=curWeek;changed=true}
-    else if(/^w\d+$/.test(id)){weeks[+id.slice(1)]={plan:v.plan||null,notes:v.notes||[],done:v.done||{}};changed=true}
-  }
-  if(changed){local();if(!document.activeElement?.dataset?.wk&&!document.activeElement?.dataset?.bk&&!dayBusy())render()}
-}
-
-/* ---------- Claude ---------- */
-// One household key, kept in the database behind the login (never in this public code).
-// Tobias (OWNER) sets it in Settings; Ana's account reads it.
-const OWNER="tobias.fabricius@gmail.com";
-let sharedKey="", isOwner=false;
-const getKey=()=>sharedKey;
-const setKey=k=>{sharedKey=k||"";if(isOwner)fp.setSharedKey(sharedKey).catch(e=>console.error("Couldn't save the Claude key",e))};
-async function askClaude(prompt,signal){
-  const key=getKey();
-  if(!key)throw {code:"no_key"};
-  let res;
-  try{
-    res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",signal,headers:{
-      "content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-      body:JSON.stringify({model:MODEL,max_tokens:16000,messages:[{role:"user",content:prompt+"\n\nYour reply is parsed by a program: output only the JSON value, with no text or code fences around it."}]})});
-  }catch(e){throw {code:e&&e.name==="AbortError"?"cancelled":"network"}}
-  if(!res.ok){
-    const code=res.status===401||res.status===403?"bad_key":res.status===429?"rate_limited":res.status===529||res.status>=500?"overloaded":"upstream_error";
-    let msg="";try{msg=(await res.json()).error?.message||""}catch(e){}
-    throw {code,message:msg};
-  }
-  const data=await res.json();
-  const text=(data.content||[]).filter(c=>c.type==="text").map(c=>c.text).join("");
-  if(data.stop_reason==="max_tokens")throw {code:"invalid_json"};
-  return parseJson(text);
-}
-function parseJson(t){
-  t=String(t).trim();
-  try{return JSON.parse(t)}catch(e){}
-  const f=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(f){try{return JSON.parse(f[1])}catch(e){}}
-  const a=t.search(/[\{\[]/),b=Math.max(t.lastIndexOf("}"),t.lastIndexOf("]"));
-  if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}
-  throw {code:"invalid_json"};
-}
-function errCopy(e){const c=e&&e.code;return c==="cancelled"?"Stopped. Nothing changed.":
-  c==="no_key"?(isOwner?"Add your Claude API key in Settings first.":"Claude isn't set up yet. Ask Tobias to add the key."):
-  c==="bad_key"?(isOwner?"Claude didn't accept the API key. Check it in Settings.":"Claude didn't accept the key. Ask Tobias to check it."):
-  c==="rate_limited"?"Too many requests just now. Try again in a minute.":
-  c==="overloaded"?"Claude is busy right now. Try again in a minute.":
-  c==="network"?"Couldn't reach Claude. Check your connection and try again.":
-  c==="invalid_json"?"The answer came back garbled. Try again.":
-  "Something went wrong reaching Claude. Try again."+(e&&e.message?" ("+e.message+")":"")}
-
-const PRINCIPLES=`You are a thoughtful personal trainer building and adjusting a weekly training plan for one person, who will read it on their phone.
-Principles:
-- Build everything around what the person says about their goals, schedule, equipment, likes and dislikes. Their words win over these defaults.
-- Every session starts with a SHORT warm-up: 2–3 items, about 3–5 minutes, specific to that session.
-- Progress gradually. Every 3–4 weeks, and around holidays, include a lighter week.
-- Include rest days. Avoid two hard days back to back. Missed sessions shift to a free day or drop; never stack them.
-- Weighted exercises: give each as [name, reps, suggested starting weight as a NUMBER in ${"${UNIT}"}] so the app shows a weight box. Reps go in the dose, never the weight. Bodyweight or cardio items are just [name, dose].
-- For cardio machines, give durations or distances the machine displays.
-- If they mention pain or injury, reduce load around it and suggest seeing a professional if it persists. Don't diagnose.
-- Speak to them as "you". Write punchy, plain English.`;
-const principles=()=>PRINCIPLES.replace("${UNIT}",settings.unit==="kg"?"kg":"lb");
-const programText=()=>principles()+(prog&&prog.profile?"\n\nWhat they told you about themselves and their goals:\n"+prog.profile:"")+(prog&&prog.rules?"\n\nStanding changes they have asked for (these override the defaults above):\n"+prog.rules:"");
-const SESSION_SHAPE=`{"id": short string, "tag": "bike"|"run"|"str"|"other", "kind": short label like "Strength", "Cardio", "Yoga", "Class", "title": string, "day": 0-6 (0=Mon) or "skip", "sum": "one-line summary", "warmup": [["exercise","dose"]], "cue": "one or two sentences of coaching", "items": [["exercise","dose"] or ["exercise","dose", startWeight]], "after": "optional finisher or note, or empty string", "mins": approximate total minutes including warm-up}`;
-const PLAN_SHAPE=`{"name": "a short, motivating name for the plan (2–4 words)", "ambition": "2–3 sentences: what this plan is for and how it works", "success": "one sentence: what success looks like in the final week", "summary": "2–3 short sentences to them about the plan or what changed", "rules": "their standing preferences, one short line each starting with '- '", "benchmarks": [up to 4 short labels for check-ins to fill in, e.g. "Plank hold · week 1 (s)"], "weeks": [one object per week: {"ph": "Base"|"Build"|"Peak"|"Lighter", "focus": "one or two sentences for the week", "vars": {token: value used in the template, e.g. "sets": 3, "walk": "35 min"}, "notes": {sessionId: closing note for that week}, "titles": {sessionId: title override for that week}}], "tpl": [the weekly session template: ${SESSION_SHAPE.replace(/"mins": approximate total minutes including warm-up/,'"mins": typical minutes')}. Template strings may contain {token} placeholders filled from each week's vars.]}`;
+function local(){try{localStorage.setItem(LKEY,JSON.stringify({weeks,bench,weights,settings,planVersion:PLANV}))}catch(e){}}
+function loadLocal(){try{const s=JSON.parse(localStorage.getItem(LKEY)||"null");if(!s)return;
+  weeks=s.weeks||{};bench=s.bench||{};weights=s.weights||{};settings={unit:"lb",...(s.settings||{})};
+  if(s.planVersion!==PLANV)Object.values(weeks).forEach(w=>{if(w)w.plan=null})}catch(e){}}
+function persist(){local()}
+function saveWeek(){local()}
 
 /* ---------- time estimate ---------- */
 const durSec=t=>{t=String(t);let m=t.match(/(\d+):(\d+)\s*min/);if(m)return +m[1]*60+ +m[2];m=t.match(/(\d+(?:\.\d+)?)\s*min/);if(m)return m[1]*60;m=t.match(/(\d+)\s*s\b/);return m?+m[1]:0};
@@ -614,10 +455,9 @@ function est(s){
 function sessionsFor(i){const st=wkState(i);return st.plan&&Array.isArray(st.plan.sessions)?st.plan.sessions:standard(i)}
 let justDone=null;
 function render(){
-  const signed=!!uid, has=!!(prog&&prog.active&&W.length);
-  $("gateSignin").hidden=signed; $("gateSetup").hidden=!signed||has; $("app").hidden=!signed||!has;
-  $("setupKeyWrap").hidden=!!getKey()||!isOwner;
-  if(!signed||!has)return;
+  const has=!!(prog&&prog.active&&W.length);
+  $("gateEmpty").hidden=has; $("app").hidden=!has;
+  if(!has)return;
   const w=W[wk], st=wkState(wk), ss=sessionsFor(wk), start=addDays(START,wk*7), dn=st.done||{};
   const end=addDays(START,W.length*7-1);
   $("eyebrow").textContent="Ana Banana 🍌";
@@ -626,21 +466,14 @@ function render(){
   $("wdates").textContent=`${fmt(start)} – ${fmt(addDays(start,6))}`;
   $("wfocus").textContent=w.focus||"";
   const tuned=!!st.plan;
-  const b=$("badge");b.textContent=tuned?"Tailored":"Standard plan";b.className="badge"+(tuned?" tuned":"");
+  const b=$("badge");b.textContent=tuned?"Rearranged":"As planned";b.className="badge"+(tuned?" tuned":"");
   $("resetBtn").hidden=!tuned;
   $("prev").disabled=wk===0;$("next").disabled=wk===W.length-1;
   $("gotoToday").hidden=wk===curWeek;
-  $("askBtn").textContent=tuned?"Update my week":"Plan my week";
-  const sm=$("summary");sm.hidden=!(st.plan&&st.plan.summary);sm.textContent=st.plan?.summary||"";
-  $("history").hidden=!(st.notes&&st.notes.length);
-  $("historyList").innerHTML=(st.notes||[]).map(n=>`<li>${esc(n.text)}</li>`).join("");
   $("ambTitle").textContent=prog.name?`The ambition · ${prog.name}`:"The ambition";
   $("ambText").textContent=prog.ambition||"";
   $("ambSuccess").textContent=prog.success?"Success: "+prog.success:"";
-  const ps=$("planSummary");ps.hidden=!prog.summary;ps.textContent=prog.summary||"";
-  $("planHistory").hidden=!(prog.notes&&prog.notes.length);
-  $("planHistoryList").innerHTML=(prog.notes||[]).map(n=>`<li>${esc(n.text)}</li>`).join("");
-  $("planMeta").textContent=prog.updated?`Plan last changed ${new Date(prog.updated).toLocaleDateString("en-US",{month:"short",day:"numeric"})}.`:"";
+  $("planMeta").textContent=prog.updated?`Plan last updated ${fromIso(prog.updated).toLocaleDateString("en-US",{month:"short",day:"numeric"})}.`:"";
   $("weeksTitle").textContent=`The ${W.length} weeks`;
 
   const active=ss.filter(s=>s.day!=="skip");
@@ -655,7 +488,7 @@ function render(){
     if(allDone)el.classList.add("alldone");
     const chk=allDone?`<span class="daycheck ${justDone===wk+":"+i?"pop":""}" role="img" aria-label="Day done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>`:"";
     const tot=here.reduce((a,s)=>a+est(s),0);
-    el.innerHTML=`<div class="dlabel"><b>${d}</b><small>${fmt(date)}</small>${tot?`<span class="dur">${tot} min</span>`:""}${chk}</div><div class="slot">${here.length?here.map(s=>card(s,dn)).join("")+howTo(here):restCard(i,dn)}${isPast&&!isToday?"":dayAsk(i,isToday)}</div>`;
+    el.innerHTML=`<div class="dlabel"><b>${d}</b><small>${fmt(date)}</small>${tot?`<span class="dur">${tot} min</span>`:""}${chk}</div><div class="slot">${here.length?here.map(s=>card(s,dn)).join("")+howTo(here):restCard(i,dn)}</div>`;
     days.appendChild(el);
   });
   const sk=ss.filter(s=>s.day==="skip");
@@ -778,275 +611,13 @@ $("prev").onclick=()=>{if(wk>0){wk--;render()}};
 $("next").onclick=()=>{if(wk<W.length-1){wk++;render()}};
 $("gotoToday").onclick=()=>{wk=curWeek;render()};
 $("resetBtn").onclick=()=>{const st=wkState(wk);st.plan=null;saveWeek(wk);render()};
-$("apiKey").addEventListener("change",e=>{setKey(e.target.value.trim());render()});
 $("unit").addEventListener("change",e=>{settings.unit=e.target.value;persist("settings",settings);render()});
-$("signOutBtn").onclick=()=>fp.signOut();
-$("emailForm").onsubmit=async e=>{e.preventDefault();const em=$("signinEmail").value.trim(),pw=$("signinPass").value;if(!em||!pw)return;
-  $("emailBtn").disabled=true;$("signinMsg").textContent="Signing in…";
-  try{await fp.signIn(em,pw);$("signinPass").value=""}
-  catch(err){const c=err&&err.code||"";const M={
-    "auth/invalid-credential":"That email and password didn't match. Check both, or reset your password.",
-    "auth/wrong-password":"Wrong password. Try again, or reset your password.",
-    "auth/user-not-found":"There's no account for that email yet. Add it in Firebase → Authentication → Users.",
-    "auth/invalid-email":"That doesn't look like an email address.",
-    "auth/operation-not-allowed":"Password sign-in is switched off. Turn on Email/Password in Firebase → Authentication → Sign-in method.",
-    "auth/configuration-not-found":"Sign-in isn't set up in Firebase yet. Turn on Email/Password in Authentication → Sign-in method.",
-    "auth/too-many-requests":"Too many tries. Wait a few minutes, or reset your password.",
-    "auth/user-disabled":"This account is switched off in Firebase.",
-    "auth/network-request-failed":"No connection. Check your internet and try again."};
-    $("signinMsg").textContent=(err&&err.userMsg)||M[c]||`Sign-in failed (${c||(err&&err.message)||"unknown error"}).`;console.error(err)}
-  finally{$("emailBtn").disabled=false}};
-$("resetPassBtn").onclick=async()=>{const em=$("signinEmail").value.trim();
-  if(!em){$("signinMsg").textContent="Type your email above first, then tap “Forgot your password?”.";$("signinEmail").focus();return}
-  try{await fp.resetPassword(em);$("signinMsg").textContent=`If ${em} has an account, a reset link is on its way. Check Junk too.`}
-  catch(err){$("signinMsg").textContent=(err&&err.userMsg)||"Couldn't send the reset email. Try again."}};
-let startOverArmed=false;
-$("startOverBtn").onclick=()=>{
-  if(!startOverArmed){startOverArmed=true;$("startOverBtn").textContent="Tap again to delete this plan";$("startOverMsg").textContent="Your ticks and notes for this plan go too. Weights are kept.";setTimeout(()=>{startOverArmed=false;$("startOverBtn").textContent="Start a new plan";$("startOverMsg").textContent=""},6000);return}
-  startOverArmed=false;$("startOverBtn").textContent="Start a new plan";$("startOverMsg").textContent="";
-  prog={active:false};persist("program",prog);
-  Object.keys(weeks).forEach(i=>{weeks[i]={plan:null,notes:[],done:{}};saveWeek(+i)});
-  applyProg();wk=0;render();scrollTo(0,0);
-};
-
-/* ---------- set up a new plan ---------- */
-let sctl=null;
-$("setupStop").onclick=()=>sctl?.abort();
-$("setupBtn").onclick=async()=>{
-  const st=$("setupStatus"), msg=$("setupAsk").value.trim(), keyIn=$("setupKey").value.trim();
-  if(keyIn)setKey(keyIn);
-  if(!msg){st.textContent="Tell Claude a little about yourself first.";st.className="status err";return}
-  if(!getKey()){st.textContent=isOwner?"Add your Claude API key to continue.":"Claude isn't set up yet. Ask Tobias to add the key, then try again.";st.className="status err";return}
-  const startMon=todayIdx<=2?mondayOf(now):addDays(mondayOf(now),7);
-  const prompt=`${principles()}
-
-Today is ${DAYS[todayIdx]} ${iso(now)}. The plan starts on Monday ${iso(startMon)}.
-
-What they told you about themselves and their goals:
-<<<${msg}>>>
-
-Design their plan. Choose a length that fits their goal (usually 6–12 weeks). Use a weekly session template plus per-week values so it progresses week to week. Put rest days where they make sense; days without a session show as rest days.
-
-Reply with ONLY a JSON object of this shape:
-${PLAN_SHAPE}`;
-  sctl=new AbortController();
-  $("setupBtn").disabled=true;$("setupStop").hidden=false;st.className="status";st.textContent="Building your plan… this can take a minute or two.";
-  try{
-    const out=await askClaude(prompt,sctl.signal);
-    const clean=validateProg(out,true);
-    if(!clean){st.textContent="That plan came back incomplete. Try again.";st.className="status err";return}
-    prog={active:true,start:iso(startMon),profile:msg,...clean,notes:[],updated:new Date().toISOString()};
-    weeks={};applyProg();wk=curWeek;persist("program",prog);
-    st.textContent="";$("setupAsk").value="";render();scrollTo(0,0);
-  }catch(e){st.className=e&&e.code==="cancelled"?"status":"status err";st.textContent=errCopy(e)}
-  finally{$("setupBtn").disabled=false;$("setupStop").hidden=true;sctl=null}
-};
-
-/* ---------- change one day, on the fly ---------- */
-// Each upcoming day has "Change this day": a quick note (or a tap on a chip) and Claude reworks that day only.
-const dayOpen=new Set(), dayDraft={}, dayMsg={}; let dctl=null, dayRunning=null;
-const dayBusy=()=>!!dayRunning||document.activeElement?.dataset?.dk!=null;
-const DAY_CHIPS=["Machine's taken, swap it","Sunny out, I'd rather run","Only 20 minutes","Feeling tired, go gentle","Feeling great, push me a bit"];
-function dayAsk(i,isToday){
-  const k=wk+":"+i, o=dayOpen.has(k), busy=dayRunning===k, m=dayMsg[k];
-  if(!o)return `<button type="button" class="dayopen" data-dayopen="${i}">${isToday?"Change today's workout":"Change this day"}</button>${m?`<p class="daynote ${m.err?"err":""}" role="status">${esc(m.text)}</p>`:""}`;
-  return `<form class="dayform" data-dayform="${i}">
-    <label class="field" for="dk-${i}">${isToday?"What's up today?":"What should change on "+DAYS[i]+"?"}
-      <textarea id="dk-${i}" data-dk="${i}" rows="2" placeholder="E.g. The rower is taken. Or: it's gorgeous out, can I go for a run instead?">${esc(dayDraft[k]||"")}</textarea></label>
-    <div class="chips">${DAY_CHIPS.map(c=>`<button type="button" class="chip" data-daychip="${i}">${esc(c)}</button>`).join("")}</div>
-    <div class="row"><button class="btn primary" type="submit" ${busy?"disabled":""}>${busy?"Changing…":"Change it"}</button>
-      <button class="btn" type="button" data-dayclose="${i}">${busy?"Stop":"Cancel"}</button>
-      ${m?`<span class="status ${m.err?"err":""}" role="status">${esc(m.text)}</span>`:""}</div>
-  </form>`;
-}
-document.addEventListener("input",e=>{const t=e.target.closest("[data-dk]");if(t)dayDraft[wk+":"+t.dataset.dk]=t.value});
-document.addEventListener("click",e=>{
-  const op=e.target.closest("[data-dayopen]"),cl=e.target.closest("[data-dayclose]"),ch=e.target.closest("[data-daychip]");
-  if(op){const k=wk+":"+op.dataset.dayopen;dayOpen.add(k);delete dayMsg[k];render();document.getElementById("dk-"+op.dataset.dayopen)?.focus();e.stopImmediatePropagation()}
-  else if(cl){const k=wk+":"+cl.dataset.dayclose;if(dayRunning===k){dctl?.abort();return}dayOpen.delete(k);delete dayMsg[k];render();e.stopImmediatePropagation()}
-  else if(ch){const i=ch.dataset.daychip,k=wk+":"+i,t=document.getElementById("dk-"+i);
-    t.value=(t.value?t.value.trim()+" ":"")+ch.textContent;dayDraft[k]=t.value;t.focus();e.stopImmediatePropagation()}
-},true);
-document.addEventListener("submit",async ev=>{
-  const f=ev.target.closest("[data-dayform]");if(!f)return;ev.preventDefault();
-  const d=+f.dataset.dayform, i=wk, k=i+":"+d, msg=(dayDraft[k]||"").trim();
-  if(!msg){dayMsg[k]={text:"Type a quick note or tap one of the suggestions.",err:true};render();return}
-  if(dayRunning)return;
-  const st=wkState(i), base=sessionsFor(i), start=addDays(START,i*7), date=addDays(start,d);
-  const isToday=date.getTime()===now.getTime();
-  const doneIds=Object.keys(st.done||{}).filter(x=>st.done[x]&&!x.startsWith("rest"));
-  const prompt=`${programText()}
-
-WEEK ${i+1} of ${W.length} · phase: ${W[i].ph} · ${W[i].focus}
-Day indexes: ${DAYS.map((x,j)=>`${j}=${x} ${fmt(addDays(start,j))}`).join(", ")}.
-
-The current plan for this week:
-${JSON.stringify(base)}
-
-Their current working weights in ${settings.unit||"lb"}: ${JSON.stringify(Object.fromEntries(Object.entries(weights).map(([a,v])=>[a,v.v])))}
-Sessions already marked DONE (keep them exactly as they are, same id and day): ${JSON.stringify(doneIds)}
-
-They're asking about ${DAYS[d]} ${fmt(date)} (day index ${d})${isToday?", which is TODAY. They may be at the gym right now, mid-workout, so keep it quick to follow":""}.
-What they say:
-<<<${msg}>>>
-
-Change that day the way they ask. Rules:
-- Leave every other day exactly as it is, with one exception: if they want to do a session from another day today (for example the run, because the weather is good), move it here and take it off its old day. If that leaves two hard days back to back, make the smallest sensible fix elsewhere.
-- Swapping a machine or exercise: replace only that item with the closest equivalent at a similar effort and time, and keep the session's id and the rest of it.
-- Keep it realistic for the time they have, and keep the warm-up short.
-- The summary is ONE short, friendly sentence on what changed.
-Reply with ONLY a JSON object: {"summary": "...", "sessions": [${SESSION_SHAPE}]} listing ALL of this week's sessions after the change. Keep existing ids for sessions you keep; new sessions get a new short id. Use "skip" for a dropped session.`;
-  dctl=new AbortController(); dayRunning=k; dayMsg[k]={text:isToday?"Reworking today…":"Reworking "+DAYS[d]+"…"}; render();
-  try{
-    const out=await askClaude(prompt,dctl.signal);
-    const clean=validateWeek(out,st.done||{},base);
-    if(!clean){dayMsg[k]={text:"That came back incomplete. Try again.",err:true};return}
-    st.plan={...clean,summary:st.plan?.summary||clean.summary};
-    st.notes=[...(st.notes||[]),{text:`${DAYS[d]}: ${msg}`,at:new Date().toISOString()}].slice(-20);
-    saveWeek(i); delete dayDraft[k]; dayOpen.delete(k);
-    dayMsg[k]={text:String(out.summary||"Done, "+DAYS[d]+" is updated.").slice(0,240)};
-    open.clear();
-  }catch(e){dayMsg[k]={text:errCopy(e),err:!(e&&e.code==="cancelled")}}
-  finally{dayRunning=null;dctl=null;render()}
-});
-
-/* ---------- adjust my week ---------- */
-let ctl=null;
-$("stopBtn").onclick=()=>ctl?.abort();
-$("askForm").addEventListener("submit",async ev=>{
-  ev.preventDefault();
-  const status=$("status"), box=$("ask"), msg=box.value.trim();
-  if(!msg){status.textContent="Type a line about your week first.";status.className="status err";box.focus();return}
-  const i=wk, st=wkState(i), base=sessionsFor(i), start=addDays(START,i*7);
-  const dayNames=DAYS.map((d,j)=>`${j}=${d} ${fmt(addDays(start,j))}`).join(", ");
-  const todayLine=(i===curWeek&&now>=START)?`Today is ${DAYS[todayIdx]} (day ${todayIdx}). Days before ${todayIdx} are in the past: only sessions already marked done may stay on past days; move anything undone from the past forward or drop it.`:(start<now&&i<curWeek?"This week is in the past.":"This week is in the future.");
-  const prompt=`${programText()}
-
-WEEK ${i+1} of ${W.length} · phase: ${W[i].ph} · ${W[i].focus}
-This week's values: ${JSON.stringify(W[i].vars||{})}
-Day indexes: ${dayNames}.
-${todayLine}
-
-The standard sessions for this week (keep their warm-ups, exercises and doses unless their situation calls for a change):
-${JSON.stringify(standard(i))}
-
-The current plan for this week:
-${JSON.stringify(base)}
-
-Their current working weights in ${settings.unit||"lb"}: ${JSON.stringify(Object.fromEntries(Object.entries(weights).map(([k,v])=>[k,v.v])))}
-
-Sessions already marked DONE (keep them exactly as they are, same id and day): ${JSON.stringify(Object.keys(st.done||{}).filter(k=>st.done[k]&&!k.startsWith("rest")))}
-
-What they told you earlier this week, oldest first:
-${(st.notes||[]).map(n=>"- "+n.text).join("\n")||"(nothing yet)"}
-
-What they say now:
-<<<${msg}>>>
-
-Rebuild the week. Reply with ONLY a JSON object: {"summary": "2–3 short, plain sentences on what you changed and why", "sessions": [${SESSION_SHAPE}]}
-Keep existing ids for sessions you keep; new sessions get a new short id. Use "skip" for a session dropped this week. At most one session per day unless they ask otherwise.`;
-  ctl=new AbortController();
-  $("askBtn").disabled=true;$("stopBtn").hidden=false;status.className="status";status.textContent="Thinking about your week…";
-  try{
-    const out=await askClaude(prompt,ctl.signal);
-    const clean=validateWeek(out,st.done||{},base);
-    if(!clean){status.textContent="That plan came back incomplete. Try again, maybe with a shorter note.";status.className="status err";return}
-    st.plan=clean; st.notes=[...(st.notes||[]),{text:msg,at:new Date().toISOString()}].slice(-20);
-    saveWeek(i); box.value=""; status.textContent="Week updated."; wk=i; render();
-  }catch(e){status.className=e&&e.code==="cancelled"?"status":"status err";status.textContent=errCopy(e)}
-  finally{$("askBtn").disabled=false;$("stopBtn").hidden=true;ctl=null}
-});
-
-/* ---------- adjust the whole plan ---------- */
-let pctl=null;
-$("planStop").onclick=()=>pctl?.abort();
-$("planForm").addEventListener("submit",async ev=>{
-  ev.preventDefault();
-  const pStatus=$("planStatus"), box=$("planAsk"), msg=box.value.trim();
-  if(!msg){pStatus.textContent="Type what you'd like to change first.";pStatus.className="status err";box.focus();return}
-  const notes=prog.notes||[];
-  const prompt=`${programText()}
-
-The plan "${prog.name||""}" has ${W.length} weeks, week 1 starting Monday ${prog.start}. They are currently in week ${curWeek+1}. Leave weeks before week ${curWeek+1} unchanged.
-Ambition: ${prog.ambition||""} Success: ${prog.success||""}
-Benchmarks: ${JSON.stringify(prog.benchmarks||[])}
-
-WEEKS (one object per week, in order):
-${JSON.stringify(W)}
-
-WEEKLY SESSION TEMPLATE (strings may contain {token} placeholders filled from each week's vars):
-${JSON.stringify(TPL)}
-
-Earlier plan requests, oldest first:
-${notes.map(n=>"- "+n.text).join("\n")||"(none)"}
-
-What they ask for now:
-<<<${msg}>>>
-
-Rework the plan to match. You may change the number of weeks if they ask. Keep the ids of sessions you keep. Keep "rules" as the complete updated list of their standing preferences, including earlier ones that still apply. Reply with ONLY a JSON object of this shape:
-${PLAN_SHAPE}`;
-  pctl=new AbortController();
-  $("planBtn").disabled=true;$("planStop").hidden=false;pStatus.className="status";pStatus.textContent="Thinking about the whole plan… this can take a minute.";
-  try{
-    const out=await askClaude(prompt,pctl.signal);
-    const clean=validateProg(out,false);
-    if(!clean){pStatus.textContent="That plan came back incomplete. Try again, maybe with a shorter request.";pStatus.className="status err";return}
-    prog={...prog,...clean,active:true,notes:[...notes,{text:msg,at:new Date().toISOString()}].slice(-20),updated:new Date().toISOString()};
-    applyProg(); persist("program",prog);
-    for(let j=curWeek+1;j<W.length;j++){const s=weeks[j];if(s&&s.plan){s.plan=null;saveWeek(j)}}
-    box.value="";pStatus.className="status";
-    pStatus.textContent=wkState(curWeek).plan?"Plan updated. This week keeps its tailored version. Tap \"Go back to the standard plan\" near the top to switch it over.":"Plan updated.";
-    render();
-  }catch(e){pStatus.className=e&&e.code==="cancelled"?"status":"status err";pStatus.textContent=errCopy(e)}
-  finally{$("planBtn").disabled=false;$("planStop").hidden=true;pctl=null}
-});
-
-/* ---------- validation ---------- */
-function normRows(a){return Array.isArray(a)?a.filter(r=>Array.isArray(r)&&r.length>=1).map(r=>{const o=[String(r[0]),String(r[1]??"")];if(r.length>2&&r[2]!==""&&r[2]!=null&&isFinite(Number(r[2])))o.push(Number(r[2]));return o}).slice(0,14):[]}
-function normSession(s,n){
-  let day=s.day==="skip"?"skip":Math.round(Number(s.day)); if(day!=="skip"&&!(day>=0&&day<=6))day="skip";
-  const o={id:String(s.id||("s"+n)).replace(/[^\w-]/g,"").slice(0,24)||("s"+n),tag:String(s.tag||"other"),kind:String(s.kind||"Session"),title:String(s.title||"Session"),day,
-    sum:String(s.sum||""),warmup:normRows(s.warmup),cue:String(s.cue||""),items:normRows(s.items),after:String(s.after||"")};
-  if(Number(s.mins)>0&&Number(s.mins)<300)o.mins=Math.round(Number(s.mins));
-  return o;
-}
-function validateWeek(o,done,base){
-  if(!o||!Array.isArray(o.sessions)||!o.sessions.length)return null;
-  const seen=new Set();
-  const out=o.sessions.slice(0,12).map((s,n)=>{const x=normSession(s||{},n);while(seen.has(x.id))x.id+="x";seen.add(x.id);return x});
-  Object.keys(done).filter(k=>done[k]&&!k.startsWith("rest")).forEach(k=>{
-    const orig=base.find(b=>b.id===k); if(!orig)return;
-    const j=out.findIndex(x=>x.id===k); if(j<0)out.push(orig); else out[j]={...out[j],day:orig.day};
-  });
-  return {sessions:out,summary:String(o.summary||"").slice(0,600)};
-}
-function validateProg(o,fresh){
-  if(!o||!Array.isArray(o.weeks)||!o.weeks.length||o.weeks.length>20||!Array.isArray(o.tpl)||!o.tpl.length)return null;
-  const strMap=m=>m&&typeof m==="object"&&!Array.isArray(m)?Object.fromEntries(Object.entries(m).slice(0,20).map(([k,v])=>[String(k),String(v)])):{};
-  const varMap=m=>m&&typeof m==="object"&&!Array.isArray(m)?Object.fromEntries(Object.entries(m).slice(0,30).map(([k,v])=>[String(k).replace(/\W/g,""),typeof v==="number"?v:String(v)])):{};
-  const weeksOut=o.weeks.map(w=>{w=w||{};return {ph:["Base","Build","Peak","Lighter"].includes(w.ph)?w.ph:"Base",focus:String(w.focus||"").slice(0,300),vars:varMap(w.vars),notes:strMap(w.notes),titles:strMap(w.titles)}});
-  if(!fresh)for(let i=0;i<Math.min(curWeek,W.length,weeksOut.length);i++)weeksOut[i]=W[i];
-  const seen=new Set();
-  const tpl=o.tpl.slice(0,12).map((s,n)=>{const x=normSession(s||{},n);while(seen.has(x.id))x.id+="x";seen.add(x.id);if(x.day==="skip")x.day=6;return x});
-  return {weeks:weeksOut,tpl,name:String(o.name||"").slice(0,60),ambition:String(o.ambition||"").slice(0,600),success:String(o.success||"").slice(0,300),
-    rules:String(o.rules||"").slice(0,1500),summary:String(o.summary||"").slice(0,600),
-    benchmarks:Array.isArray(o.benchmarks)?o.benchmarks.slice(0,4).map(String):[]};
-}
 
 /* ---------- start ---------- */
-try{localStorage.removeItem("tp.apikey")}catch(e){}
+loadLocal();
+prog=window.PLAN&&Array.isArray(window.PLAN.weeks)&&window.PLAN.weeks.length?{active:true,...window.PLAN}:null;
+applyProg();wk=curWeek;local();
 render();
-fp.onUser(async u=>{
-  uid=u?u.uid:null;
-  $("whoami").textContent=u?(u.email||""):"";
-  isOwner=!!(u&&String(u.email||"").toLowerCase()===OWNER);
-  sharedKey=u?await fp.getSharedKey():"";
-  $("apiKey").value=isOwner?sharedKey:"";
-  $("apiKeyWrap").hidden=!isOwner; $("sharedKeyNote").hidden=isOwner||!u;
-  weeks={};bench={};weights={};prog=null;settings={unit:"lb"};applyProg();
-  if(uid){loadLocal();wk=curWeek;fp.watch(uid,onDocs)}
-  render();
-});
 </script>
 </body>
 </html>
