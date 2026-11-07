@@ -308,6 +308,25 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .dayform .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .daynote{font-size:14px;color:var(--ink);background:var(--ok-soft);border-radius:14px;padding:8px 12px}
 .daynote.err{background:var(--fan-soft);color:var(--fan)}
+.swapbtn{margin-left:8px;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--fan);font:inherit;font-size:14px;font-weight:800;cursor:pointer;vertical-align:middle}
+.swapbtn:hover{border-color:var(--fan)}
+.exdose{display:inline-flex;align-items:center;justify-content:flex-end}
+.addex{align-self:flex-start;margin-top:8px;background:none;border:0;color:var(--fan);font:inherit;font-size:14px;font-weight:700;cursor:pointer;padding:4px 0}
+.swapedit{display:flex;flex-direction:column;gap:10px;background:var(--fan-soft);border-radius:16px;padding:12px;margin:8px 0}
+.swapedit .two{display:grid;grid-template-columns:1fr 110px;gap:8px}
+.swapedit .two input{width:100%}
+.swapedit .row,.daypanel .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.picks{display:flex;gap:6px;flex-wrap:wrap}
+.pick{border:1px solid var(--surface);background:var(--surface);color:var(--fan);border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;text-align:left}
+.pick:hover{border-color:var(--fan)}
+.pick small{color:var(--muted);font-weight:600}
+.linkdanger{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;font-weight:700;text-decoration:underline;cursor:pointer;padding:0}
+.daypanel{display:flex;flex-direction:column;gap:12px;background:var(--fan-soft);border-radius:20px;padding:14px}
+.daypanel h4{margin:0;font-family:var(--display);font-weight:600;font-size:17px;font-variation-settings:"SOFT" 100,"opsz" 72}
+.daypanel textarea{width:100%;resize:vertical;font:inherit;font-size:16px;line-height:1.4;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.daypanel .hint{margin-bottom:-6px;font-weight:700}
+.daypanel .askc{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+@media (max-width:420px){.swapedit .two{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -369,6 +388,10 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 
   <details class="fold" id="settingsFold"><summary><h2>Settings</h2></summary><div class="foldbody">
     <div class="settings">
+      <label class="field wide" for="apiKey">Claude key (optional)
+        <input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…">
+        <span class="hint" id="apiKeyHint">Turns on "Ask Claude" when you change a day. Saved only on this phone.</span>
+      </label>
       <label class="field" for="unit">Weights in
         <select id="unit"><option value="lb">lb</option><option value="kg">kg</option></select>
       </label>
@@ -438,6 +461,84 @@ function loadLocal(){try{const s=JSON.parse(localStorage.getItem(LKEY)||"null");
 function persist(){local()}
 function saveWeek(){local()}
 
+/* ---------- Claude (optional) ----------
+   A Claude key can be saved in Settings on this phone only (never in this public code).
+   With it, "Change this day" also offers "Ask Claude". Without it, the quick changes still work. */
+const KKEY="ab.claudekey";
+const getKey=()=>{try{return localStorage.getItem(KKEY)||""}catch(e){return ""}};
+const setKey=k=>{try{k?localStorage.setItem(KKEY,k):localStorage.removeItem(KKEY)}catch(e){}};
+async function askClaude(prompt,signal){
+  const key=getKey();
+  if(!key)throw {code:"no_key"};
+  let res;
+  try{
+    res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",signal,headers:{
+      "content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:MODEL,max_tokens:16000,messages:[{role:"user",content:prompt+"\n\nYour reply is parsed by a program: output only the JSON value, with no text or code fences around it."}]})});
+  }catch(e){throw {code:e&&e.name==="AbortError"?"cancelled":"network"}}
+  if(!res.ok){
+    const code=res.status===401||res.status===403?"bad_key":res.status===429?"rate_limited":res.status===529||res.status>=500?"overloaded":"upstream_error";
+    let msg="";try{msg=(await res.json()).error?.message||""}catch(e){}
+    throw {code,message:msg};
+  }
+  const data=await res.json();
+  const text=(data.content||[]).filter(c=>c.type==="text").map(c=>c.text).join("");
+  if(data.stop_reason==="max_tokens")throw {code:"invalid_json"};
+  return parseJson(text);
+}
+function parseJson(t){
+  t=String(t).trim();
+  try{return JSON.parse(t)}catch(e){}
+  const f=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(f){try{return JSON.parse(f[1])}catch(e){}}
+  const a=t.search(/[\{\[]/),b=Math.max(t.lastIndexOf("}"),t.lastIndexOf("]"));
+  if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}
+  throw {code:"invalid_json"};
+}
+function errCopy(e){const c=e&&e.code;return c==="cancelled"?"Stopped. Nothing changed.":
+  c==="no_key"?"Add a Claude key in Settings to ask Claude.":
+  c==="bad_key"?"Claude didn't accept the key in Settings. Check it there.":
+  c==="rate_limited"?"Too many requests just now. Try again in a minute.":
+  c==="overloaded"?"Claude is busy right now. Try again in a minute.":
+  c==="network"?"Couldn't reach Claude. Check your connection and try again.":
+  c==="invalid_json"?"The answer came back garbled. Try again.":
+  "Something went wrong reaching Claude. Try again."+(e&&e.message?" ("+e.message+")":"")}
+
+const PRINCIPLES=`You are a thoughtful personal trainer building and adjusting a weekly training plan for one person, who will read it on their phone.
+Principles:
+- Build everything around what the person says about their goals, schedule, equipment, likes and dislikes. Their words win over these defaults.
+- Every session starts with a SHORT warm-up: 2–3 items, about 3–5 minutes, specific to that session.
+- Progress gradually. Every 3–4 weeks, and around holidays, include a lighter week.
+- Include rest days. Avoid two hard days back to back. Missed sessions shift to a free day or drop; never stack them.
+- Weighted exercises: give each as [name, reps, suggested starting weight as a NUMBER in ${"${UNIT}"}] so the app shows a weight box. Reps go in the dose, never the weight. Bodyweight or cardio items are just [name, dose].
+- For cardio machines, give durations or distances the machine displays.
+- If they mention pain or injury, reduce load around it and suggest seeing a professional if it persists. Don't diagnose.
+- Speak to them as "you". Write punchy, plain English.`;
+const principles=()=>PRINCIPLES.replace("${UNIT}",settings.unit==="kg"?"kg":"lb");
+const programText=()=>principles()+(prog&&prog.profile?"\n\nWhat they told you about themselves and their goals:\n"+prog.profile:"")+(prog&&prog.rules?"\n\nStanding changes they have asked for (these override the defaults above):\n"+prog.rules:"");
+const SESSION_SHAPE=`{"id": short string, "tag": "bike"|"run"|"str"|"other", "kind": short label like "Strength", "Cardio", "Yoga", "Class", "title": string, "day": 0-6 (0=Mon) or "skip", "sum": "one-line summary", "warmup": [["exercise","dose"]], "cue": "one or two sentences of coaching", "items": [["exercise","dose"] or ["exercise","dose", startWeight]], "after": "optional finisher or note, or empty string", "mins": approximate total minutes including warm-up}`;
+const PLAN_SHAPE=`{"name": "a short, motivating name for the plan (2–4 words)", "ambition": "2–3 sentences: what this plan is for and how it works", "success": "one sentence: what success looks like in the final week", "summary": "2–3 short sentences to them about the plan or what changed", "rules": "their standing preferences, one short line each starting with '- '", "benchmarks": [up to 4 short labels for check-ins to fill in, e.g. "Plank hold · week 1 (s)"], "weeks": [one object per week: {"ph": "Base"|"Build"|"Peak"|"Lighter", "focus": "one or two sentences for the week", "vars": {token: value used in the template, e.g. "sets": 3, "walk": "35 min"}, "notes": {sessionId: closing note for that week}, "titles": {sessionId: title override for that week}}], "tpl": [the weekly session template: ${SESSION_SHAPE.replace(/"mins": approximate total minutes including warm-up/,'"mins": typical minutes')}. Template strings may contain {token} placeholders filled from each week's vars.]}`;
+
+
+/* ---------- validation (Claude answers) ---------- */
+function normRows(a){return Array.isArray(a)?a.filter(r=>Array.isArray(r)&&r.length>=1).map(r=>{const o=[String(r[0]),String(r[1]??"")];if(r.length>2&&r[2]!==""&&r[2]!=null&&isFinite(Number(r[2])))o.push(Number(r[2]));return o}).slice(0,14):[]}
+function normSession(s,n){
+  let day=s.day==="skip"?"skip":Math.round(Number(s.day)); if(day!=="skip"&&!(day>=0&&day<=6))day="skip";
+  const o={id:String(s.id||("s"+n)).replace(/[^\w-]/g,"").slice(0,24)||("s"+n),tag:String(s.tag||"other"),kind:String(s.kind||"Session"),title:String(s.title||"Session"),day,
+    sum:String(s.sum||""),warmup:normRows(s.warmup),cue:String(s.cue||""),items:normRows(s.items),after:String(s.after||"")};
+  if(Number(s.mins)>0&&Number(s.mins)<300)o.mins=Math.round(Number(s.mins));
+  return o;
+}
+function validateWeek(o,done,base){
+  if(!o||!Array.isArray(o.sessions)||!o.sessions.length)return null;
+  const seen=new Set();
+  const out=o.sessions.slice(0,12).map((s,n)=>{const x=normSession(s||{},n);while(seen.has(x.id))x.id+="x";seen.add(x.id);return x});
+  Object.keys(done).filter(k=>done[k]&&!k.startsWith("rest")).forEach(k=>{
+    const orig=base.find(b=>b.id===k); if(!orig)return;
+    const j=out.findIndex(x=>x.id===k); if(j<0)out.push(orig); else out[j]={...out[j],day:orig.day};
+  });
+  return {sessions:out,summary:String(o.summary||"").slice(0,600)};
+}
+
 /* ---------- time estimate ---------- */
 const durSec=t=>{t=String(t);let m=t.match(/(\d+):(\d+)\s*min/);if(m)return +m[1]*60+ +m[2];m=t.match(/(\d+(?:\.\d+)?)\s*min/);if(m)return m[1]*60;m=t.match(/(\d+)\s*s\b/);return m?+m[1]:0};
 const minsIn=t=>{let n=0;String(t).replace(/(\d+(?:\.\d+)?)\s*min/g,(_,x)=>{n+=+x});return n};
@@ -488,7 +589,7 @@ function render(){
     if(allDone)el.classList.add("alldone");
     const chk=allDone?`<span class="daycheck ${justDone===wk+":"+i?"pop":""}" role="img" aria-label="Day done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>`:"";
     const tot=here.reduce((a,s)=>a+est(s),0);
-    el.innerHTML=`<div class="dlabel"><b>${d}</b><small>${fmt(date)}</small>${tot?`<span class="dur">${tot} min</span>`:""}${chk}</div><div class="slot">${here.length?here.map(s=>card(s,dn)).join("")+howTo(here):restCard(i,dn)}</div>`;
+    el.innerHTML=`<div class="dlabel"><b>${d}</b><small>${fmt(date)}</small>${tot?`<span class="dur">${tot} min</span>`:""}${chk}</div><div class="slot">${here.length?here.map(s=>card(s,dn)).join("")+howTo(here):restCard(i,dn)}${isPast&&!isToday?"":dayPanel(i,isToday)}</div>`;
     days.appendChild(el);
   });
   const sk=ss.filter(s=>s.day==="skip");
@@ -534,14 +635,15 @@ function howTo(sessions){
 }
 function list(rows,sid){
   const u=settings.unit==="kg"?"kg":"lb", step=u==="kg"?2.5:5;
-  return `<div class="ex ${sid?"":"warm"}">${(rows||[]).map(r=>{
-  const base=`<span class="exname">${esc(r[0])}</span><span class="exdose">${esc(r[1])}</span>`;
+  return `<div class="ex ${sid?"":"warm"}">${(rows||[]).map((r,n)=>{
+  if(sid&&swapOpen===wk+":"+sid+":"+n)return swapEditor(r,sid,n);
+  const base=`<span class="exname">${esc(r[0])}</span><span class="exdose">${esc(r[1])}${sid?`<button type="button" class="swapbtn" data-swap="${esc(sid)}:${n}" aria-label="Swap or edit ${esc(r[0])}">⇄</button>`:""}</span>`;
   const weighted=sid&&r.length>2&&r[2]!==""&&r[2]!=null&&isFinite(Number(r[2]));
   if(!weighted)return `<div class="exrow">${base}</div>`;
   const k=slug(r[0]), rec=weights[k], val=rec?rec.v:Number(r[2]), id=`wt-${esc(sid)}-${k}`;
   const last=rec?`Last used ${rec.v} ${u} · ${new Date(rec.at).toLocaleDateString("en-US",{month:"short",day:"numeric"})}. Felt easy for every set? Add ${step}.`:`Suggested start. Adjust to what you actually lift.`;
   return `<div class="exrow">${base}<span class="wt"><button type="button" data-wk="${k}" data-start="${Number(r[2])}" data-step="-${step}" aria-label="${step} ${u} lighter">−</button><input id="${id}" data-wk="${k}" inputmode="decimal" value="${val}" aria-label="${esc(r[0])} weight in ${u}"><button type="button" data-wk="${k}" data-start="${Number(r[2])}" data-step="${step}" aria-label="${step} ${u} heavier">+</button><span class="unit">${u}</span><span class="last ${rec?"":"new"}">${last}</span></span></div>`;
-}).join("")}</div>`}
+}).join("")}${sid?(swapOpen===wk+":"+sid+":new"?swapEditor(["",""],sid,"new"):`<button type="button" class="addex" data-swap="${esc(sid)}:new">+ Add an exercise</button>`):""}</div>`}
 let wT;
 function setWeight(k,v,rerender){
   v=Math.max(0,Math.round(Number(v)*2)/2); if(!isFinite(v))return;
@@ -611,12 +713,150 @@ $("prev").onclick=()=>{if(wk>0){wk--;render()}};
 $("next").onclick=()=>{if(wk<W.length-1){wk++;render()}};
 $("gotoToday").onclick=()=>{wk=curWeek;render()};
 $("resetBtn").onclick=()=>{const st=wkState(wk);st.plan=null;saveWeek(wk);render()};
+$("apiKey").addEventListener("change",e=>{setKey(e.target.value.trim());$("apiKeyHint").textContent=getKey()?"Saved on this phone. \"Ask Claude\" is on.":"Turns on \"Ask Claude\" when you change a day. Saved only on this phone.";render()});
 $("unit").addEventListener("change",e=>{settings.unit=e.target.value;persist("settings",settings);render()});
+
+/* ---------- change things on the go ----------
+   Quick changes (always available): swap or edit any exercise, add an exercise, add an extra session
+   to a day, move a session from another day here, or rest instead. Ask Claude: only with a key in Settings. */
+let swapOpen=null;
+const clone=x=>JSON.parse(JSON.stringify(x));
+function editable(i){const st=wkState(i);if(!st.plan)st.plan={sessions:clone(standard(i)),summary:""};return st}
+const DEFAULT_EXTRAS=[
+  {id:"walk",tag:"other",kind:"Walk",title:"Feel-good walk",sum:"30 min brisk walk, outside if you can",warmup:[],cue:"A pace where you can still chat. Swing your arms.",items:[["Brisk walk","30 min"]],after:"",mins:30},
+  {id:"run",tag:"run",kind:"Run",title:"Easy sunny run",sum:"25 min easy jog, walk breaks welcome",warmup:[["Brisk walk","3 min"]],cue:"Easy enough to chat. Walk whenever you like.",items:[["Easy jog with walk breaks","20 min"]],after:"",mins:25},
+  {id:"yoga",tag:"other",kind:"Yoga",title:"Yoga flow",sum:"30 min gentle flow",warmup:[],cue:"Follow any 30-minute beginner flow you like.",items:[["Yoga flow","30 min"]],after:"",mins:30},
+  {id:"stretch",tag:"other",kind:"Stretch",title:"Stretch it out",sum:"15 min full-body stretch",warmup:[],cue:"Slow and comfy. No bouncing.",items:[["Full-body stretch","15 min"]],after:"",mins:15}
+];
+const extras=()=>Array.isArray(prog&&prog.extras)&&prog.extras.length?prog.extras:DEFAULT_EXTRAS;
+function altsFor(name){
+  const m=prog&&prog.swaps||{}, k=slug(name);
+  for(const [n,v] of Object.entries(m))if(slug(n)===k&&Array.isArray(v))return v;
+  return [];
+}
+function swapEditor(r,sid,n){
+  const isNew=n==="new", alts=isNew?[]:altsFor(r[0]), id=`${sid}-${n}`;
+  return `<div class="swapedit" data-swapform="${esc(sid)}:${n}">
+    ${alts.length?`<div class="picks">${alts.map((a,j)=>`<button type="button" class="pick" data-alt="${esc(sid)}:${n}:${j}">${esc(a[0])} <small>${esc(a[1]||"")}</small></button>`).join("")}</div>`:""}
+    <div class="two">
+      <label class="field" for="sw-name-${esc(id)}">${isNew?"Exercise":alts.length?"Or type your own":"Exercise"}<input id="sw-name-${esc(id)}" value="${esc(r[0])}" placeholder="E.g. Stair climber"></label>
+      <label class="field" for="sw-dose-${esc(id)}">Amount<input id="sw-dose-${esc(id)}" value="${esc(r[1])}" placeholder="10 min"></label>
+    </div>
+    <div class="row"><button type="button" class="btn primary" data-swapsave="${esc(sid)}:${n}">${isNew?"Add":"Save"}</button>
+      <button type="button" class="btn" data-swapcancel="1">Cancel</button>
+      ${isNew?"":`<button type="button" class="linkdanger" data-swapdel="${esc(sid)}:${n}">Remove this exercise</button>`}</div>
+  </div>`;
+}
+function setItem(sid,n,row){
+  const st=editable(wk), s=st.plan.sessions.find(x=>x.id===sid); if(!s)return;
+  s.items=s.items||[];
+  if(n==="new"){if(row)s.items.push(row)} else if(row)s.items[+n]=row; else s.items.splice(+n,1);
+  saveWeek(wk); swapOpen=null; render();
+}
+
+// day panel
+const dayOpen=new Set(), dayDraft={}, dayMsg={}; let dctl=null, dayRunning=null;
+const DAY_CHIPS=["Machine's taken, swap it","Sunny out, I'd rather run","Only 20 minutes","Feeling tired, go gentle","Feeling great, push me a bit"];
+function dayPanel(i,isToday){
+  const k=wk+":"+i, o=dayOpen.has(k), m=dayMsg[k];
+  const note=m?`<p class="daynote ${m.err?"err":""}" role="status">${esc(m.text)}</p>`:"";
+  if(!o)return `<button type="button" class="dayopen" data-dayopen="${i}">${isToday?"Change today":"Change this day"}</button>${note}`;
+  const dn=wkState(wk).done||{}, ss=sessionsFor(wk);
+  const here=ss.filter(s=>s.day===i), undone=here.filter(s=>!dn[s.id]);
+  const movable=ss.filter(s=>s.day!==i&&!dn[s.id]);
+  const busy=dayRunning===k, key=!!getKey();
+  return `<div class="daypanel">
+    <h4>${isToday?"Change today":"Change "+DAYS[i]}</h4>
+    ${movable.length?`<span class="hint">Bring a session here</span><div class="picks">${movable.map(s=>`<button type="button" class="pick" data-movehere="${i}:${esc(s.id)}">Do ${esc(s.title)} here <small>${s.day==="skip"?"dropped":"from "+DAYS[s.day]}</small></button>`).join("")}</div>`:""}
+    <span class="hint">Add something extra</span><div class="picks">${extras().map((x,j)=>`<button type="button" class="pick" data-extra="${i}:${j}">+ ${esc(x.title)} <small>${esc(x.mins?x.mins+" min":"")}</small></button>`).join("")}</div>
+    ${undone.length?`<div class="row"><button type="button" class="btn" data-restday="${i}">Rest ${isToday?"today":"this day"} instead</button></div>`:""}
+    ${key?`<form class="askc" data-dayform="${i}">
+      <label class="field" for="dk-${i}">Or ask Claude
+        <textarea id="dk-${i}" data-dk="${i}" rows="2" placeholder="E.g. The rower is taken. Or: it's gorgeous out, can I go for a run instead?">${esc(dayDraft[k]||"")}</textarea></label>
+      <div class="picks">${DAY_CHIPS.map(c=>`<button type="button" class="pick" data-daychip="${i}">${esc(c)}</button>`).join("")}</div>
+      <div class="row"><button class="btn primary" type="submit" ${busy?"disabled":""}>${busy?"Changing…":"Ask Claude"}</button>${busy?`<button class="btn" type="button" data-daystop="1">Stop</button>`:""}</div>
+    </form>`:""}
+    <div class="row"><button type="button" class="btn" data-dayclose="${i}">Done</button></div>
+    ${note}
+  </div>`;
+}
+function dayDone(i,text){const k=wk+":"+i;dayMsg[k]={text};dayOpen.delete(k);open.clear();saveWeek(wk);render()}
+document.addEventListener("input",e=>{const t=e.target.closest("[data-dk]");if(t)dayDraft[wk+":"+t.dataset.dk]=t.value});
+document.addEventListener("click",e=>{
+  const g=sel=>e.target.closest(sel);
+  let b;
+  if(b=g("[data-swap]")){swapOpen=wk+":"+b.dataset.swap;render();const [sid,n]=b.dataset.swap.split(":");document.getElementById(`sw-name-${sid}-${n}`)?.focus()}
+  else if(b=g("[data-swapcancel]")){swapOpen=null;render()}
+  else if(b=g("[data-alt]")){const [sid,n,j]=b.dataset.alt.split(":");const s=sessionsFor(wk).find(x=>x.id===sid);const a=altsFor(s.items[+n][0])[+j];if(a)setItem(sid,n,a.slice(0,3))}
+  else if(b=g("[data-swapsave]")){const [sid,n]=b.dataset.swapsave.split(":");const nm=$(`sw-name-${sid}-${n}`).value.trim(),ds=$(`sw-dose-${sid}-${n}`).value.trim();if(!nm){$(`sw-name-${sid}-${n}`).focus();return}
+    const s=sessionsFor(wk).find(x=>x.id===sid), old=n==="new"?null:s.items[+n];
+    const row=[nm,ds]; if(old&&old.length>2&&slug(old[0])===slug(nm))row.push(old[2]);
+    setItem(sid,n,row)}
+  else if(b=g("[data-swapdel]")){const [sid,n]=b.dataset.swapdel.split(":");setItem(sid,n,null)}
+  else if(b=g("[data-dayopen]")){const k=wk+":"+b.dataset.dayopen;dayOpen.add(k);delete dayMsg[k];render()}
+  else if(b=g("[data-dayclose]")){const k=wk+":"+b.dataset.dayclose;dayOpen.delete(k);delete dayMsg[k];render()}
+  else if(b=g("[data-daystop]")){dctl?.abort()}
+  else if(b=g("[data-movehere]")){const [i,id]=b.dataset.movehere.split(":");const st=editable(wk),s=st.plan.sessions.find(x=>x.id===id);if(!s)return;
+    const from=s.day;s.day=+i;dayDone(+i,`${s.title} moved here${from==="skip"?"":" from "+DAYS[from]}.`)}
+  else if(b=g("[data-extra]")){const [i,j]=b.dataset.extra.split(":").map(Number);const st=editable(wk),x=clone(extras()[j]);
+    x.id=String(x.id||"x")+"-"+Date.now().toString(36);x.day=i;st.plan.sessions.push(x);dayDone(i,`Added ${x.title}. Have fun!`)}
+  else if(b=g("[data-restday]")){const i=+b.dataset.restday;const st=editable(wk),dn=st.done||{};
+    const startD=addDays(START,wk*7), used=d=>st.plan.sessions.some(s=>s.day===d);
+    const moved=[];st.plan.sessions.filter(s=>s.day===i&&!dn[s.id]).forEach(s=>{
+      let to=null;for(let d=i+1;d<7;d++){if(addDays(startD,d)>=now&&!used(d)){to=d;break}}
+      s.day=to===null?"skip":to;moved.push(to===null?`${s.title} is dropped this week`:`${s.title} moved to ${DAYS[to]}`)});
+    dayDone(i,`Rest day! ${moved.join(", ")}.`)}
+  else if(b=g("[data-daychip]")){const i=b.dataset.daychip,k=wk+":"+i,t=$("dk-"+i);t.value=(t.value?t.value.trim()+" ":"")+b.textContent;dayDraft[k]=t.value;t.focus()}
+  else return;
+  e.stopImmediatePropagation();
+},true);
+document.addEventListener("submit",async ev=>{
+  const f=ev.target.closest("[data-dayform]");if(!f)return;ev.preventDefault();
+  const d=+f.dataset.dayform, i=wk, k=i+":"+d, msg=(dayDraft[k]||"").trim();
+  if(!msg){dayMsg[k]={text:"Type a quick note or tap one of the suggestions.",err:true};render();return}
+  if(dayRunning)return;
+  const st=wkState(i), base=sessionsFor(i), start=addDays(START,i*7), date=addDays(start,d);
+  const isToday=date.getTime()===now.getTime();
+  const doneIds=Object.keys(st.done||{}).filter(x=>st.done[x]&&!x.startsWith("rest"));
+  const prompt=`${programText()}
+
+WEEK ${i+1} of ${W.length} · phase: ${W[i].ph} · ${W[i].focus}
+Day indexes: ${DAYS.map((x,j)=>`${j}=${x} ${fmt(addDays(start,j))}`).join(", ")}.
+
+The current plan for this week:
+${JSON.stringify(base)}
+
+Their current working weights in ${settings.unit||"lb"}: ${JSON.stringify(Object.fromEntries(Object.entries(weights).map(([a,v])=>[a,v.v])))}
+Sessions already marked DONE (keep them exactly as they are, same id and day): ${JSON.stringify(doneIds)}
+
+They're asking about ${DAYS[d]} ${fmt(date)} (day index ${d})${isToday?", which is TODAY. They may be at the gym right now, mid-workout, so keep it quick to follow":""}.
+What they say:
+<<<${msg}>>>
+
+Change that day the way they ask. Rules:
+- Leave every other day exactly as it is, with one exception: if they want to do a session from another day today (for example the run, because the weather is good), move it here and take it off its old day. If that leaves two hard days back to back, make the smallest sensible fix elsewhere.
+- Swapping a machine or exercise: replace only that item with the closest equivalent at a similar effort and time, and keep the session's id and the rest of it.
+- Keep it realistic for the time they have, and keep the warm-up short.
+- The summary is ONE short, friendly sentence on what changed.
+Reply with ONLY a JSON object: {"summary": "...", "sessions": [${SESSION_SHAPE}]} listing ALL of this week's sessions after the change. Keep existing ids for sessions you keep; new sessions get a new short id. Use "skip" for a dropped session.`;
+  dctl=new AbortController(); dayRunning=k; dayMsg[k]={text:isToday?"Reworking today…":"Reworking "+DAYS[d]+"…"}; render();
+  try{
+    const out=await askClaude(prompt,dctl.signal);
+    const clean=validateWeek(out,st.done||{},base);
+    if(!clean){dayMsg[k]={text:"That came back incomplete. Try again.",err:true};return}
+    st.plan={...clean,summary:st.plan?.summary||clean.summary};
+    st.notes=[...(st.notes||[]),{text:`${DAYS[d]}: ${msg}`,at:new Date().toISOString()}].slice(-20);
+    delete dayDraft[k]; dayOpen.delete(k); open.clear(); saveWeek(i);
+    dayMsg[k]={text:String(out.summary||"Done, "+DAYS[d]+" is updated.").slice(0,240)};
+  }catch(e){dayMsg[k]={text:errCopy(e),err:!(e&&e.code==="cancelled")}}
+  finally{dayRunning=null;dctl=null;render()}
+});
 
 /* ---------- start ---------- */
 loadLocal();
 prog=window.PLAN&&Array.isArray(window.PLAN.weeks)&&window.PLAN.weeks.length?{active:true,...window.PLAN}:null;
 applyProg();wk=curWeek;local();
+$("apiKey").value=getKey();if(getKey())$("apiKeyHint").textContent="Saved on this phone. \"Ask Claude\" is on.";
 render();
 </script>
 </body>
