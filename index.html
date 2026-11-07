@@ -331,14 +331,22 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .ytlink small{display:block;font-size:12px;font-weight:700;color:var(--fan)}
 .ytlink .play{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--fan);color:var(--on-fan);font-size:12px;padding-left:2px}
 .ytlink:hover span:last-child{text-decoration:underline;text-underline-offset:3px}
-.ytquick{display:flex;align-items:center;gap:10px;margin:0 12px 12px;padding:8px 12px;border-radius:14px;background:var(--fan-soft);color:var(--fan);font-weight:800;text-decoration:none;width:max-content;max-width:calc(100% - 24px)}
-.ytquick .play{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--fan);color:var(--on-fan);font-size:11px;padding-left:2px}
-.ytquick:hover{text-decoration:underline;text-underline-offset:3px}
-.card.done .ytquick{background:var(--surface)}
 </style>
 </head>
 <body>
 <div class="wrap">
+
+  <section class="gate" id="gateLock" hidden>
+    <div class="eyebrow">Ana Banana 🍌</div>
+    <h1>Hi! What's the password?</h1>
+    <form id="lockForm" style="display:flex;flex-direction:column;gap:10px">
+      <label class="field" for="lockPw">Password
+        <input id="lockPw" type="password" autocomplete="current-password" autocapitalize="none" required>
+      </label>
+      <button class="btn primary" id="lockBtn" type="submit" style="align-self:flex-start">Open my plan</button>
+    </form>
+    <p class="hint" id="lockMsg">You only need it once on this phone.</p>
+  </section>
 
   <section class="gate" id="gateEmpty" hidden>
     <div class="eyebrow">Ana Banana 🍌</div>
@@ -346,7 +354,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     <p>Tobias is putting it together. Check back soon!</p>
   </section>
 
-  <div id="app" style="display:contents">
+  <div id="app" hidden style="display:contents">
 
   <header>
     <div class="eyebrow" id="eyebrow">Ana Banana exercise plan</div>
@@ -404,13 +412,14 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
         <select id="unit"><option value="lb">lb</option><option value="kg">kg</option></select>
       </label>
     </div>
+    <div class="actions"><button class="btn" id="lockNow" type="button">Lock this phone</button><span class="hint">Asks for the password again next time.</span></div>
   </div></details>
 
   <p class="foot" id="saveNote">Your ticks and weights are saved on this phone.</p>
   </div>
 </div>
 
-<script src="plan.js"></script>
+<script src="plan.enc.js"></script>
 <script>
 const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const MODEL = "claude-sonnet-5-5";
@@ -460,7 +469,7 @@ function standard(i){
    are saved in this browser. When plan.js gets a new version, week rearrangements reset
    (so the new plan shows), but ticks, weights and benchmarks are kept. */
 const LKEY="ab.v1";
-const PLANV=String(window.PLAN&&window.PLAN.version||"");
+let PLANV="";
 function wkState(i){return weeks[i]||(weeks[i]={plan:null,notes:[],done:{}})}
 function local(){try{localStorage.setItem(LKEY,JSON.stringify({weeks,bench,weights,settings,planVersion:PLANV}))}catch(e){}}
 function loadLocal(){try{const s=JSON.parse(localStorage.getItem(LKEY)||"null");if(!s)return;
@@ -565,7 +574,7 @@ function sessionsFor(i){const st=wkState(i);return st.plan&&Array.isArray(st.pla
 let justDone=null;
 function render(){
   const has=!!(prog&&prog.active&&W.length);
-  $("gateEmpty").hidden=has; $("app").hidden=!has;
+  $("gateLock").hidden=true; $("gateEmpty").hidden=has; $("app").hidden=!has;
   if(!has)return;
   const w=W[wk], st=wkState(wk), ss=sessionsFor(wk), start=addDays(START,wk*7), dn=st.done||{};
   const end=addDays(START,W.length*7-1);
@@ -669,7 +678,6 @@ function card(s,dn){
   return `<div class="card ${isOpen?"open":""} ${isDone?"done":""}">
     <button class="chead" data-t="${esc(s.id)}" aria-expanded="${isOpen}"><span class="tag ${tag}">${esc(s.kind||tag)}</span>
       <span class="cbody"><span class="ctitle">${esc(s.title)}</span><span class="csum">${esc(s.sum)}</span></span><span class="chev">›</span></button>
-    ${(s.items||[]).some(r=>/^yoga with adriene/i.test(String(r[0])))?`<a class="ytquick" href="${yt("Yoga With Adriene")}" target="_blank" rel="noopener"><span class="play" aria-hidden="true">▶</span>Open Yoga With Adriene</a>`:""}
     ${isOpen?`<div class="detail">
       ${s.warmup&&s.warmup.length?`<div class="block"><h3>Warm-up</h3>${list(s.warmup)}</div>`:""}
       <div class="block"><h3>Workout</h3>${s.cue?`<p class="cue">${esc(s.cue)}</p>`:""}${list(s.items,s.id)}</div>
@@ -864,12 +872,43 @@ Reply with ONLY a JSON object: {"summary": "...", "sessions": [${SESSION_SHAPE}]
   finally{dayRunning=null;dctl=null;render()}
 });
 
+/* ---------- password ----------
+   The plan ships encrypted (plan.enc.js, made with tools/plancrypt.mjs). The password unlocks it in
+   the browser and is remembered on this phone. Case and spaces around it don't matter. */
+const PWKEY="ab.pw";
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function openPlan(pw){
+  const e=window.PLAN_ENC; if(!e)return null;
+  const subtle=crypto.subtle;
+  const base=await subtle.importKey("raw",new TextEncoder().encode(String(pw).trim().toLowerCase()),"PBKDF2",false,["deriveKey"]);
+  const key=await subtle.deriveKey({name:"PBKDF2",salt:unb64(e.salt),iterations:e.iter||150000,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
+  const out=await subtle.decrypt({name:"AES-GCM",iv:unb64(e.iv)},key,unb64(e.data));
+  return JSON.parse(new TextDecoder().decode(out));
+}
+function boot(plan){
+  window.PLAN=plan; PLANV=String(plan&&plan.version||"");
+  loadLocal();
+  prog=plan&&Array.isArray(plan.weeks)&&plan.weeks.length?{active:true,...plan}:null;
+  applyProg();wk=curWeek;local();
+  $("apiKey").value=getKey();if(getKey())$("apiKeyHint").textContent="Saved on this phone. \"Ask Claude\" is on.";
+  render();
+}
+function showLock(msg){$("app").hidden=true;$("gateEmpty").hidden=true;$("gateLock").hidden=false;if(msg)$("lockMsg").textContent=msg}
+$("lockForm").addEventListener("submit",async e=>{e.preventDefault();
+  const pw=$("lockPw").value; if(!pw.trim())return;
+  $("lockBtn").disabled=true;$("lockMsg").textContent="Opening…";
+  try{const plan=await openPlan(pw);try{localStorage.setItem(PWKEY,pw)}catch(_){}$("lockPw").value="";boot(plan)}
+  catch(err){$("lockMsg").textContent="That's not it. Try again.";$("lockPw").select()}
+  finally{$("lockBtn").disabled=false}});
+$("lockNow").onclick=()=>{try{localStorage.removeItem(PWKEY)}catch(_){}location.reload()};
+
 /* ---------- start ---------- */
-loadLocal();
-prog=window.PLAN&&Array.isArray(window.PLAN.weeks)&&window.PLAN.weeks.length?{active:true,...window.PLAN}:null;
-applyProg();wk=curWeek;local();
-$("apiKey").value=getKey();if(getKey())$("apiKeyHint").textContent="Saved on this phone. \"Ask Claude\" is on.";
-render();
+(async()=>{
+  if(!window.PLAN_ENC){boot(null);return}
+  let saved="";try{saved=localStorage.getItem(PWKEY)||""}catch(_){}
+  if(saved){try{boot(await openPlan(saved));return}catch(_){try{localStorage.removeItem(PWKEY)}catch(__){}}}
+  showLock();$("lockPw").focus();
+})();
 </script>
 </body>
 </html>
