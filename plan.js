@@ -1,130 +1,119 @@
 // Ana Banana exercise plan: the plan itself. Built with Claude and updated by Tobias.
 // Bump "version" whenever the plan changes, so the site shows the new version on her phone.
-// Items named "Yoga With Adriene: <video>" show as tap-to-play links (a YouTube search for that video).
+// Items named "Yoga With Adriene" show as a tap-to-play link to her videos on YouTube.
+// This repo is public: keep personal details (age, weight, health, job) out of this file.
 (function () {
-  const ywa = (video, mins) => [`Yoga With Adriene: ${video}`, mins];
-
-  // Other videos she can swap any yoga session for.
-  const yogaSwaps = [
-    ywa("10 Minute Yoga For Beginners", "about 10 min"),
-    ywa("Morning Yoga For Beginners", "about 15 min"),
-    ywa("Yoga For Lower Back Pain", "about 20 min"),
-    ywa("Bedtime Yoga", "about 20 min"),
-    ywa("Yoga For Complete Beginners", "about 20 min")
-  ];
+  const yoga = mins => ["Yoga With Adriene", mins];
 
   window.PLAN = {
-    version: "trial-1",
+    version: "v2-2026-11-07",
     updated: "2026-11-07",
     start: "2026-11-09",
-    name: "Four Weeks of Flow",
-    ambition: "Four gentle weeks to make moving a daily habit. Every day has Yoga With Adriene, and most days add a few easy moves or a walk. No gym, no equipment, nothing scary.",
-    success: "By week 4, daily yoga feels like a treat, and your check-ins show you're a little stronger and bendier.",
-    rules: "- Yoga every day, everything else light\n- No gym or equipment needed\n- Walks rather than runs",
-    profile: "Trial plan for Ana: daily Yoga With Adriene plus light bodyweight exercises and walks at home. No equipment. She rarely runs outside. Keep everything gentle, positive and short.",
+    name: "Energy Back by New Year",
+    ambition: "Get your energy back and feel stronger by New Year's, without adding stress to long weeks. Two light gym days built on the bike, treadmill and light dumbbells, with Yoga With Adriene and stretching in between for posture and flexibility. A third gym day is a bonus, never a must.",
+    success: "In the last week, three rounds feel easy, your plank is longer than in week 1, and you feel more awake.",
+    rules: "- Two gym days a week; a third is optional\n- Really light: always finish feeling you could do more\n- Alternate gym days with stretching or Yoga With Adriene (keep yoga general)\n- Short sessions that fit around long, tiring work weeks\n- Focus on treadmill, bike, assault bike and free weights\n- Goals: strength, flexibility, posture, and burning a few more calories",
+    profile: "Very long, exhausting work weeks; feeling tired and sedentary. Goals: more strength and flexibility, better posture, burn calories to lose about 2 lb. No injuries. Gym with treadmill, bike, assault bike and free weights. Max 2, at most 3 gym days a week, really light work, alternating with stretching and Yoga With Adriene (keep yoga general: no specific videos or instructions).",
     benchmarks: [
       "Forward fold · week 1 (knees, shins or toes?)",
-      "Wall push-ups in a row · week 1",
-      "Forward fold · week 4",
-      "Wall push-ups in a row · week 4"
+      "Plank on knees · week 1 (seconds)",
+      "Forward fold · last week",
+      "Plank on knees · last week (seconds)"
     ],
 
     weeks: [
-      { ph: "Base", focus: "Find your rhythm. Short and gentle, every day. Showing up is the whole goal this week.",
-        vars: { sets: 2, reps: 8, hold: "20 s", walk: "20 min", long: "30 min" } },
-      { ph: "Base", focus: "Same flow, a touch more. Notice what already feels easier than last week.",
-        vars: { sets: 2, reps: 10, hold: "25 s", walk: "25 min", long: "35 min" } },
-      { ph: "Build", focus: "A little stronger. Add a third round on the strength days if you feel good.",
-        vars: { sets: 3, reps: 10, hold: "30 s", walk: "25 min", long: "40 min" } },
-      { ph: "Build", focus: "Last trial week! Redo your check-ins on Sunday and see how far you've come.",
-        vars: { sets: 3, reps: 12, hold: "30 s", walk: "30 min", long: "45 min" } }
+      { ph: "Base", focus: "Ease in. Everything should feel too easy this week. That's on purpose: the goal is to show up, not to be tired.",
+        vars: { sets: 2, reps: 10, hold: "20 s", bike: "10 min", incline: "15 min", iv: 4, walk: "20 min", opt: "25 min" } },
+      { ph: "Base", focus: "Same sessions, a touch longer on the bike and treadmill. Note your weights so next week starts there.",
+        vars: { sets: 2, reps: 10, hold: "25 s", bike: "12 min", incline: "18 min", iv: 5, walk: "20 min", opt: "25 min" } },
+      { ph: "Lighter", focus: "Thanksgiving week. Two gym days is a win. Enjoy the food and the people.",
+        vars: { sets: 2, reps: 8, hold: "20 s", bike: "10 min", incline: "15 min", iv: 4, walk: "20 min", opt: "20 min" },
+        notes: { gymB: "Thanksgiving! Do this on Wednesday or Friday instead, or swap it for a family walk." } },
+      { ph: "Build", focus: "A little more. Third round on gym days, if it feels good. Add 2–5 lb where 10 reps felt easy.",
+        vars: { sets: 3, reps: 10, hold: "25 s", bike: "12 min", incline: "20 min", iv: 5, walk: "25 min", opt: "30 min" } },
+      { ph: "Build", focus: "Steady week. Stand tall, shoulders down and back, on the treadmill too.",
+        vars: { sets: 3, reps: 12, hold: "30 s", bike: "15 min", incline: "20 min", iv: 6, walk: "25 min", opt: "30 min" } },
+      { ph: "Build", focus: "The strongest week of the plan, and it's still light. Sleep comes first if the week is brutal.",
+        vars: { sets: 3, reps: 12, hold: "30 s", bike: "15 min", incline: "22 min", iv: 6, walk: "30 min", opt: "30 min" } },
+      { ph: "Lighter", focus: "Christmas week. Keep moving a little and let the rest go.",
+        vars: { sets: 2, reps: 10, hold: "25 s", bike: "10 min", incline: "15 min", iv: 4, walk: "20 min", opt: "25 min" },
+        notes: { fri: "Christmas Day. A short yoga, a walk with family, or nothing at all. All good." } },
+      { ph: "Lighter", focus: "Last week of the year! Redo your check-ins and see how far you've come.",
+        vars: { sets: 2, reps: 10, hold: "30 s", bike: "12 min", incline: "18 min", iv: 4, walk: "20 min", opt: "25 min" },
+        notes: { gymB: "New Year's Day. Move it to Friday, or make it a fresh-air walk." } }
     ],
 
     tpl: [
-      { id: "mon", tag: "str", kind: "Yoga + strength", title: "Fresh start flow", day: 0,
-        sum: "Beginner yoga · {sets} rounds of easy strength",
+      { id: "gymA", tag: "str", kind: "Gym", title: "Strength & posture", day: 0,
+        sum: "{sets} rounds · legs, back, shoulders · {bike} easy bike",
+        warmup: [["Bike or assault bike, easy", "5 min"], ["Arm circles", "10 each way"]],
+        cue: "Light is the point: pick weights you could lift 5 more times. Go round {sets} times, resting until your breathing settles.",
+        items: [["Goblet squat", "{reps}", 15], ["One-arm dumbbell row", "{reps} / side", 12], ["Dumbbell Romanian deadlift", "{reps}", 12],
+                ["Dumbbell reverse fly", "{reps}", 5], ["Dead bug", "8 / side"]],
+        after: "Finish with {bike} easy on the bike, at a pace where you could chat.", mins: 40 },
+
+      { id: "tue", tag: "other", kind: "Yoga", title: "Yoga", day: 1,
+        sum: "Yoga With Adriene",
+        warmup: [], cue: "",
+        items: [yoga("20–30 min")], after: "", mins: 25 },
+
+      { id: "wed", tag: "run", kind: "Stretch", title: "Walk & stretch", day: 2,
+        sum: "{walk} brisk walk · posture stretches",
         warmup: [],
-        cue: "The yoga is your warm-up. Then go round the moves below {sets} times, resting until your breath is calm.",
-        items: [ywa("Yoga For Complete Beginners", "about 20 min"), ["Chair squats", "{reps}"], ["Wall push-ups", "{reps}"], ["Glute bridges", "{reps}"]],
+        cue: "Walk outside or on the treadmill, brisk enough to feel warm. Then hold each stretch and breathe slowly.",
+        items: [["Brisk walk", "{walk}"], ["Chest opener in a doorway", "30 s / side"], ["Hip flexor stretch, kneeling", "30 s / side"],
+                ["Hamstring stretch", "30 s / side"], ["Cat-cow", "10 slow"], ["Child's pose", "1 min"]],
         after: "", mins: 35 },
 
-      { id: "tue", tag: "run", kind: "Walk + yoga", title: "Walk & unwind", day: 1,
-        sum: "{walk} brisk walk · neck and shoulder yoga",
-        warmup: [],
-        cue: "Walk at a pace where you can still chat. Then roll out the mat and let your shoulders drop.",
-        items: [["Brisk walk", "{walk}"], ywa("Yoga For Neck And Shoulder Relief", "about 15 min")],
-        after: "" },
+      { id: "gymB", tag: "bike", kind: "Gym", title: "Cardio & posture", day: 3,
+        sum: "{incline} incline walk · light strength · optional bike",
+        warmup: [["Treadmill walk, easy", "5 min"]],
+        cue: "On the incline, breathe a little harder but never gasp. Then one easy round of each strength move, {sets} times.",
+        items: [["Incline treadmill walk", "{incline}"], ["Split squat, holding a rail", "8 / side"], ["Seated dumbbell shoulder press", "{reps}", 8],
+                ["Farmer carry", "30 s", 15], ["Plank on knees", "{hold}"]],
+        after: "Optional: {iv} rounds on the assault bike, 20 s brisk and 70 s easy. Skip it on tired days.", mins: 45 },
 
-      { id: "wed", tag: "str", kind: "Yoga + core", title: "Strong middle", day: 2,
-        sum: "Core yoga · {sets} rounds of gentle core",
-        warmup: [],
-        cue: "Slow and controlled beats fast. Keep breathing the whole time, even in the plank.",
-        items: [ywa("Yoga For Core", "about 20 min"), ["Bird dog", "{reps} / side"], ["Dead bug", "{reps} / side"], ["Forearm plank on knees", "{hold}"]],
-        after: "", mins: 35 },
+      { id: "fri", tag: "other", kind: "Yoga", title: "Yoga", day: 4,
+        sum: "Yoga With Adriene",
+        warmup: [], cue: "",
+        items: [yoga("20–30 min")], after: "", mins: 25 },
 
-      { id: "thu", tag: "str", kind: "Yoga + legs", title: "Happy hips", day: 3,
-        sum: "Hip yoga · {sets} rounds for legs and glutes",
+      { id: "bonus", tag: "bike", kind: "Optional", title: "Easy cardio (bonus)", day: 5,
+        sum: "{opt} easy bike or treadmill · or a walk outside",
         warmup: [],
-        cue: "Feel the burn in your glutes, not your lower back. Small movements are fine.",
-        items: [ywa("Yoga For Hips", "about 20 min"), ["Side-lying leg lifts", "{reps} / side"], ["Clamshells", "{reps} / side"], ["Calf raises", "{reps}"]],
-        after: "", mins: 35 },
-
-      { id: "fri", tag: "other", kind: "Yoga", title: "Feel-good Friday", day: 4,
-        sum: "Total body stretch, nothing else",
-        warmup: [],
-        cue: "No extras today. Breathe, stretch, enjoy it.",
-        items: [ywa("Total Body Yoga Deep Stretch", "about 25 min")],
-        after: "", mins: 25 },
-
-      { id: "sat", tag: "run", kind: "Walk + yoga", title: "Weekend walk", day: 5,
-        sum: "{long} walk somewhere pretty · flexibility yoga",
-        warmup: [],
-        cue: "Pick a nice route and bring a friend or a podcast. Stretch with Adriene when you're home.",
-        items: [["Long walk", "{long}"], ywa("Yoga For Flexibility", "about 15 min")],
-        after: "" },
-
-      { id: "sun", tag: "other", kind: "Yoga", title: "Sunday slow", day: 6,
-        sum: "Gentle yoga for a calm week ahead",
-        warmup: [],
-        cue: "The easiest day of the week. Cosy clothes, candle optional.",
-        items: [ywa("Yoga For Stress Relief", "about 20 min")],
-        after: "", mins: 20 }
+        cue: "Only if you have the energy. A walk outside counts just as much. Tick it off either way.",
+        items: [["Bike or treadmill, easy", "{opt}"], ["Hamstring and hip stretch", "5 min"]],
+        after: "", mins: 35 }
     ],
 
     // Ready-made swaps, shown when she taps ⇄ next to an exercise.
     swaps: {
-      "Chair squats": [["Wall sit", "30 s"], ["Sumo squats", "10"], ["Step-ups on a low step", "8 / side"]],
-      "Wall push-ups": [["Countertop push-ups", "10"], ["Knee push-ups", "8"], ["Arm circles", "30 s each way"]],
-      "Glute bridges": [["Hip thrusts against the couch", "10"], ["Donkey kicks", "10 / side"]],
-      "Bird dog": [["Cat-cow", "10 slow"], ["Superman hold", "20 s"]],
-      "Dead bug": [["Lying toe taps", "10 / side"], ["Heel slides", "10 / side"]],
-      "Forearm plank on knees": [["Wall plank", "30 s"], ["High plank on knees", "20 s"]],
-      "Side-lying leg lifts": [["Standing side leg lifts", "10 / side"], ["Fire hydrants", "10 / side"]],
-      "Clamshells": [["Fire hydrants", "10 / side"], ["Glute bridges", "10"]],
-      "Calf raises": [["March in place", "1 min"], ["Single-leg balance", "30 s / side"]],
-      "Brisk walk": [["Walking pad or treadmill", "25 min"], ["Dance it out at home", "20 min"], ["Easy bike ride", "25 min"]],
-      "Long walk": [["Treadmill walk on an incline", "30 min"], ["Easy bike ride", "40 min"]],
-      "Yoga With Adriene: Yoga For Complete Beginners": yogaSwaps,
-      "Yoga With Adriene: Yoga For Neck And Shoulder Relief": yogaSwaps,
-      "Yoga With Adriene: Yoga For Core": yogaSwaps,
-      "Yoga With Adriene: Yoga For Hips": yogaSwaps,
-      "Yoga With Adriene: Total Body Yoga Deep Stretch": yogaSwaps,
-      "Yoga With Adriene: Yoga For Flexibility": yogaSwaps,
-      "Yoga With Adriene: Yoga For Stress Relief": yogaSwaps
+      "Goblet squat": [["Squat to a bench", "10"], ["Leg press, light", "10", 40]],
+      "One-arm dumbbell row": [["Seated cable row", "10", 30], ["Chest-supported dumbbell row", "10", 10]],
+      "Dumbbell Romanian deadlift": [["Glute bridge", "12"], ["Kettlebell deadlift", "10", 20]],
+      "Dumbbell reverse fly": [["Band pull-apart", "15"], ["Wall angels", "10"]],
+      "Dead bug": [["Bird dog", "8 / side"], ["Heel taps, lying down", "10 / side"]],
+      "Incline treadmill walk": [["Bike, steady", "20 min"], ["Elliptical, steady", "20 min"]],
+      "Split squat, holding a rail": [["Step-ups on a low box", "8 / side"], ["Squat to a bench", "10"]],
+      "Seated dumbbell shoulder press": [["Wall angels", "10"], ["Lateral raise, light", "10", 5]],
+      "Farmer carry": [["Suitcase carry, one side at a time", "20 s / side", 15], ["Dumbbell shrug", "12", 15]],
+      "Plank on knees": [["Wall plank", "30 s"], ["Dead bug", "8 / side"]],
+      "Brisk walk": [["Treadmill walk", "20 min"], ["Easy bike", "20 min"]],
+      "Bike or treadmill, easy": [["Walk outside", "30 min"], ["Assault bike, very easy", "15 min"]],
+      "Bike or assault bike, easy": [["Treadmill walk, easy", "5 min"]],
+      "Chest opener in a doorway": [["Hands clasped behind back, lift gently", "30 s"]],
+      "Hip flexor stretch, kneeling": [["Standing quad stretch", "30 s / side"]],
+      "Hamstring stretch": [["Seated forward fold", "45 s"]]
     },
 
     // Extras she can add to any day under "Change this day".
     extras: [
-      { id: "walk", tag: "run", kind: "Walk", title: "Feel-good walk", sum: "30 min brisk walk, outside if you can",
-        warmup: [], cue: "A pace where you can still chat. Swing your arms.", items: [["Brisk walk", "30 min"]], after: "", mins: 30 },
-      { id: "quick", tag: "other", kind: "Yoga", title: "10-minute yoga", sum: "A quick reset with Adriene",
-        warmup: [], cue: "Short and sweet. Perfect for busy days.", items: [ywa("10 Minute Yoga For Beginners", "about 10 min")], after: "", mins: 10 },
-      { id: "back", tag: "other", kind: "Yoga", title: "Happy back yoga", sum: "Gentle yoga for a stiff back",
-        warmup: [], cue: "Move slowly and skip anything that pinches.", items: [ywa("Yoga For Lower Back Pain", "about 20 min")], after: "", mins: 20 },
-      { id: "bed", tag: "other", kind: "Yoga", title: "Bedtime yoga", sum: "Wind down before sleep",
-        warmup: [], cue: "Lights low. Let it be easy.", items: [ywa("Bedtime Yoga", "about 20 min")], after: "", mins: 20 },
-      { id: "run", tag: "run", kind: "Run", title: "Easy sunny run", sum: "20 min easy jog, walk breaks welcome",
-        warmup: [["Brisk walk", "3 min"]], cue: "Easy enough to chat. Walk whenever you like.", items: [["Easy jog with walk breaks", "20 min"]], after: "", mins: 25 }
+      { id: "walk", tag: "run", kind: "Walk", title: "Feel-good walk", sum: "20–30 min brisk walk, outside if you can",
+        warmup: [], cue: "A pace where you can still chat. Swing your arms, shoulders down.", items: [["Brisk walk", "25 min"]], after: "", mins: 25 },
+      { id: "yoga", tag: "other", kind: "Yoga", title: "Yoga", sum: "Yoga With Adriene",
+        warmup: [], cue: "", items: [yoga("10–30 min")], after: "", mins: 20 },
+      { id: "bike", tag: "bike", kind: "Cardio", title: "Easy bike", sum: "20 min easy spin",
+        warmup: [], cue: "Chatty pace, music on.", items: [["Bike, easy", "20 min"]], after: "", mins: 20 }
     ]
   };
 })();

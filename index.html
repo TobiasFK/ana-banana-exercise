@@ -618,7 +618,7 @@ function restCard(i,dn){
       <span class="cbody"><span class="ctitle">Rest day</span><span class="csum">Walk, stretch, be nice to yourself</span></span><span class="chev">›</span></button>
     ${ro?`<div class="detail">
       <p class="cue">Keep moving lightly. A walk counts. Add a stretch or a yin session if your body wants it.</p>
-      <div class="restlinks"><a href="${yt("Mady Morrison 15 minute full body stretch english")}" target="_blank" rel="noopener">15-min stretch ↗</a><a href="${yt("Travis Eliot yin yoga 45 minute full body")}" target="_blank" rel="noopener">45-min yin yoga ↗</a></div>
+      <div class="restlinks"><a href="${yt("Yoga With Adriene")}" target="_blank" rel="noopener">Yoga With Adriene ↗</a></div>
       <div class="actions"><button class="btn primary" data-d="${rid}">${rd?"Undo":"Mark done"}</button></div></div>`:""}
   </div>`;
 }
@@ -641,8 +641,8 @@ function list(rows,sid){
   const u=settings.unit==="kg"?"kg":"lb", step=u==="kg"?2.5:5;
   return `<div class="ex ${sid?"":"warm"}">${(rows||[]).map((r,n)=>{
   if(sid&&swapOpen===wk+":"+sid+":"+n)return swapEditor(r,sid,n);
-  const ywa=String(r[0]).match(/^yoga with adriene:\s*(.+)$/i);
-  const nm=ywa?`<a class="ytlink" href="${yt("Yoga With Adriene "+ywa[1])}" target="_blank" rel="noopener"><span class="play" aria-hidden="true">▶</span><span><small>Yoga With Adriene</small>${esc(ywa[1])}</span></a>`:esc(r[0]);
+  const ywa=String(r[0]).match(/^yoga with adriene(?::\s*(.+))?$/i);
+  const nm=ywa?`<a class="ytlink" href="${yt("Yoga With Adriene"+(ywa[1]?" "+ywa[1]:""))}" target="_blank" rel="noopener"><span class="play" aria-hidden="true">▶</span><span><small>Yoga With Adriene</small>${esc(ywa[1]||"Pick any video")}</span></a>`:esc(r[0]);
   const base=`<span class="exname">${nm}</span><span class="exdose">${esc(r[1])}${sid?`<button type="button" class="swapbtn" data-swap="${esc(sid)}:${n}" aria-label="Swap or edit ${esc(r[0])}">⇄</button>`:""}</span>`;
   const weighted=sid&&r.length>2&&r[2]!==""&&r[2]!=null&&isFinite(Number(r[2]));
   if(!weighted)return `<div class="exrow">${base}</div>`;
