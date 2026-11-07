@@ -350,8 +350,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 
   <section class="gate" id="gateEmpty" hidden>
     <div class="eyebrow">Ana Banana 🍌</div>
-    <h1>Your plan is on its way</h1>
-    <p>Tobias is putting it together. Check back soon!</p>
+    <h1>Couldn't load your plan</h1>
+    <p>Check your connection, then refresh.</p>
+    <button class="btn primary" type="button" style="align-self:flex-start" onclick="location.replace(location.pathname+'?v='+Date.now())">Refresh</button>
   </section>
 
   <div id="app" hidden style="display:contents">
